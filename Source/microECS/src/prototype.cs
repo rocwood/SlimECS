@@ -1,121 +1,79 @@
-using System.Collections.Generic;
-
 namespace microECS
 {
-	public class IdMap
-	{
-		private int _modFactor = 1999;
-		private int _lastId = 0;
-
-		//private HashSet<int> _freeIndices;
-		private List<int> _index2Id;
-
-		/// quick lookup for (id % modFactor) => (index)
-		private int[] _idMod2Index;
-
-		private Dictionary<int, int> _id2IndexLookup;
-
-		public int Create()
-		{
-			_lastId++;
-
-			var id = _lastId;
-			var index = GetFreeIndex(id);
-			var idMod = id % _modFactor;
-
-			if (_idMod2Index[idMod] == 0)
-				_idMod2Index[idMod] = index;
-			else 
-				_id2IndexLookup[id] = index;
-
-			return id;
-		}
-
-		private int GetFreeIndex(int id)
-		{
-
-		}
-	}
 
 	public class Context
 	{
+		private readonly short _contextId;
+		private readonly EntitySlotList _slotList;
 		private IComponentList[] _componentData;
-		private Dictionary<int, int> _entityIdRemap;
 
-		private int _id = 0;
-
-		public int CreateEntity()
+		internal Context(short contextId)
 		{
-			// TODO
-			_id++;
+			if (contextId < 0 || contextId >= Entity.contextIdMax)
+				throw new ContextIdOverflowException();
 
-			return _id;
+			_contextId = contextId;
+			_slotList = new EntitySlotList(contextId << Entity.slotBits);
 		}
 
-		public void DestroyEntity(int id)
+		internal short ContextId => _contextId;
+
+		public Entity CreateEntity()
 		{
-			if (id == 0)
-				return;
+			var e = _slotList.Create();
 
-			if (id < 0)
-				_entityIdRemap.Remove(-id);
-
-			// TODO
+			return e;
 		}
 
-		public T GetComponent<T>(int id) where T : struct, IComponent
+		public void DestroyEntity(Entity e)
 		{
-			if (id == 0)
-				return default;
+			if (!_slotList.Destroy(e))
+				return;
 
-			int entityIndex = GetEntityIndex(id);
-			if (entityIndex == 0)
-				return default;
-
-			var componentList = GetComponentList<T>();
-			return (T)componentList.Get(entityIndex);
+			foreach (var componentList in _componentData)
+				componentList.Remove(e.slot & Entity.slotMask);
 		}
 
-		public void SetComponent<T>(int id, T value) where T:struct, IComponent
+		public bool GetComponent<T>(Entity e, out T value) where T:struct, IComponent
 		{
-			if (id == 0)
-				return;
-
-			int entityIndex = GetEntityIndex(id);
-			if (entityIndex <= 0)
-				return;
-
-			var componentList = GetComponentList<T>();
-			componentList.Set(entityIndex, value);
-		}
-
-		public void RemoveComponent<T>(int id) where T:struct, IComponent
-		{
-			if (id == 0)
-				return;
-
-			int entityIndex = GetEntityIndex(id);
-			if (entityIndex <= 0)
-				return;
-
-			var componentList = GetComponentList<T>();
-			componentList.Remove(entityIndex);
-		}
-
-		private int GetEntityIndex(int id)
-		{
-			if (id == 0)
-				return 0;
-
-			int entityIndex = id;
-
-			if (id < 0)
+			if (!_slotList.IsValid(e))
 			{
-				if (!_entityIdRemap.TryGetValue(-id, out entityIndex))
-					return 0;
+				value = default;
+				return false;
 			}
 
-			return entityIndex;
+			var componentList = GetComponentList<T>();
+			value = (T)componentList.Get(e.slot & Entity.slotMask);
+			return true;
+		}
+
+		public T GetComponent<T>(Entity e) where T:struct, IComponent
+		{
+			if (!_slotList.IsValid(e))
+				return default;
+		
+			var componentList = GetComponentList<T>();
+			return (T)componentList.Get(e.slot & Entity.slotMask);
+		}
+
+		public bool SetComponent<T>(Entity e, T value) where T:struct, IComponent
+		{
+			if (!_slotList.IsValid(e))
+				return false;
+
+			var componentList = GetComponentList<T>();
+			componentList.Set(e.slot & Entity.slotMask, value);
+			return true;
+		}
+
+		public bool RemoveComponent<T>(Entity e) where T:struct, IComponent
+		{
+			if (!_slotList.IsValid(e))
+				return false;
+
+			var componentList = GetComponentList<T>();
+			componentList.Remove(e.slot & Entity.slotMask);
+			return true;
 		}
 
 		private IComponentList GetComponentList<T>() where T:struct, IComponent

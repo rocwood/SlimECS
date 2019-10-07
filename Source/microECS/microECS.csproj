@@ -6,4 +6,7 @@
     <RootNamespace>microECS</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="src\Entity\" />
+  </ItemGroup>
 </Project>
