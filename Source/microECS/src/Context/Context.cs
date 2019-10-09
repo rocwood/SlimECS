@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace microECS
@@ -35,7 +36,7 @@ namespace microECS
 			public static readonly EntityData Empty = new EntityData();
 		}
 
-		private readonly List<EntityData> _entities;
+		private EntityData[] _entities;
 		private int _entityCount = 0;
 
 
@@ -48,7 +49,7 @@ namespace microECS
 			_contextIdMask = contextId << Entity.slotBits;
 			_name = name;
 
-			_entities = new List<EntityData>(_defaultCapacity);
+			_entities = new EntityData[_defaultCapacity];
 		}
 
 
@@ -62,47 +63,21 @@ namespace microECS
 				int slot = FindEmptySlot(id);
 
 				var entity = new Entity(id, slot | _contextIdMask);
-				var entityData = new EntityData(entity, name);
-				_entities[slot] = entityData;
-
+				_entities[slot] = new EntityData(entity, name);
 				_entityCount++;
 
 				return entity;
-
-				/*
-				// TODO
-				var e = _entities[slot];
-				if (e.id == 0)
-				{
-					e = new Entity(id, slot | _contextIdMask);
-					
-					return e;
-				}
-
-				slot = _entities.FindIndex(x => x.id == 0);
-				if (slot > 0)
-				{
-					e = new Entity(id, slot | _contextIdMask);
-					_entities[slot] = e;
-					return e;
-				}
-
-				// TODO enlarge
-				slot = _entities.Count;
-				e = new Entity(id, slot | _contextIdMask);
-				_entities.Add(e);
-				*/
-
-
 			}
 		}
 
 		private int FindEmptySlot(int id)
 		{
-			int slot = 0;
-			if (_entityCount < _entities.Count)
+			int slot;
+			int capacity = _entities.Length;
+
+			if (_entityCount < capacity)
 			{
-				int start = id % _slotModDenominator % _entities.Count;
+				int start = id % _slotModDenominator % capacity;
 				slot = start;
 
 				// find empty slot, at _findEmptySlotStep
@@ -111,19 +86,16 @@ namespace microECS
 					if (_entities[slot].IsEmpty())
 						break;
 
-					slot = (slot + _findEmptySlotStep) % _entities.Count;
-
+					slot = (slot + _findEmptySlotStep) % capacity;
 					if (slot == start)
-					{
-
-					}
+						throw new EntityContainerException();
 				}
 			}
 			else
 			{
 				// enlarge the entity list when full
-				slot = _entities.Count;
-				_entities.Add(EntityData.Empty);
+				slot = capacity;
+				Array.Resize(ref _entities, capacity * 2);
 			}
 
 			return slot;
@@ -131,47 +103,39 @@ namespace microECS
 
 		public bool Destroy(Entity e)
 		{
-			if (!IsValid(e))
-				return false;
+			lock (_syncObject)
+			{
+				if (!IsValid(e))
+					return false;
 
-			int slot = e.slot & Entity.slotMask;
-			_entities[slot] = EntityData.Empty;
+				// destroy all components 
+				foreach (var componentList in _componentLists)
+					componentList.Remove(e.slot & Entity.slotMask);
 
-			return true;
+				// remove entity
+				int slot = e.slot & Entity.slotMask;
+				_entities[slot] = EntityData.Empty;
+				_entityCount--;
+
+				return true;
+			}
 		}
 
-		public bool IsValid(Entity e)
+		internal bool IsValid(Entity e)
 		{
 			if (e.id <= 0 || e.slot <= 0 || (e.slot & Entity.contextIdMask) != _contextIdMask)
 				return false;
 
 			int slot = e.slot & Entity.slotMask;
-			if (slot >= _entities.Count)
+			if (slot >= _entities.Length)
 				return false;
 
-			return _entities[slot] == e;
-		}
-
-
-		public Entity CreateEntity()
-		{
-			var e = _slotList.Create();
-
-			return e;
-		}
-
-		public void DestroyEntity(Entity e)
-		{
-			if (!_slotList.Destroy(e))
-				return;
-
-			foreach (var componentList in _componentLists)
-				componentList.Remove(e.slot & Entity.slotMask);
+			return _entities[slot].entity == e;
 		}
 
 		public bool GetComponent<T>(Entity e, out T value) where T : struct, IComponent
 		{
-			if (!_slotList.IsValid(e))
+			if (!IsValid(e))
 			{
 				value = default;
 				return false;
@@ -184,7 +148,7 @@ namespace microECS
 
 		public T GetComponent<T>(Entity e) where T : struct, IComponent
 		{
-			if (!_slotList.IsValid(e))
+			if (!IsValid(e))
 				return default;
 
 			var componentList = GetComponentList<T>();
@@ -193,7 +157,7 @@ namespace microECS
 
 		public bool SetComponent<T>(Entity e, T value) where T : struct, IComponent
 		{
-			if (!_slotList.IsValid(e))
+			if (!IsValid(e))
 				return false;
 
 			var componentList = GetComponentList<T>();
@@ -203,7 +167,7 @@ namespace microECS
 
 		public bool RemoveComponent<T>(Entity e) where T : struct, IComponent
 		{
-			if (!_slotList.IsValid(e))
+			if (!IsValid(e))
 				return false;
 
 			var componentList = GetComponentList<T>();
