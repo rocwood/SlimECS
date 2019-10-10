@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace microECS
 {
@@ -15,12 +15,14 @@ namespace microECS
 		public static Entity Empty = new Entity();
 
 		public readonly int id;
-        internal readonly int slot; // 1 bit sign, 7 bits contextId, 24 bits slot-index
+        internal readonly int location; // 1 bit sign, 7 bits contextId, 24 bits slot-index
 
-        internal Entity(int id, int slot)
+		internal int slot => location & slotMask;
+
+        internal Entity(int id, int slot, int contextIdMask)
         {
             this.id = id;
-            this.slot = slot;
+            this.location = slot | contextIdMask;
         }
 
         public override bool Equals(object obj)
@@ -30,13 +32,13 @@ namespace microECS
 
         public bool Equals(Entity other)
         {
-            return id == other.id && slot == other.slot;
+            return id == other.id && location == other.location;
         }
 
         public override int GetHashCode()
         {
 			// https://referencesource.microsoft.com/#System.Numerics/System/Numerics/HashCodeHelper.cs
-			return ((id << 5) + id) ^ slot;
+			return ((id << 5) + id) ^ location;
 
 			// https://programmingpraxis.com/2018/06/19/fibonacci-hash/
 			//return (int)(id * 2654435769L + slot);
