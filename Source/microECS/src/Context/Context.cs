@@ -4,128 +4,52 @@ namespace microECS
 {
 	public class Context
 	{
-		private const int _defaultCapacity = 1024;
-		private const int _slotModDenominator = 997;
-		private const int _findEmptySlotStep = 31;
-
 		private readonly int _contextId;
-		private readonly int _contextIdMask;
+		private readonly int _contextIdShift;
 		private readonly string _name;
 
-		private object _syncObject = new object();
+		private readonly IComponentDataArray[] _components;
+		private readonly EntityDataList _entities;
 
-		private IComponentDataArray[] _components;
-		private EntityData[] _entities;
-
-		private int _entityCount = 0;
-		private int _lastEntityId = 0;
-
-		struct EntityData
-		{
-			public Entity entity;
-			public string name;
-
-			public EntityData(Entity entity, string name)
-			{
-				this.entity = entity;
-				this.name = name;
-			}
-
-			public bool IsEmpty() => entity.id == 0;
-
-			public static readonly EntityData Empty = new EntityData();
-		}
-
-		internal Context(int contextId, string name = null)
+		internal Context(int contextId, string name)
 		{
 			if (contextId < 0 || contextId >= Entity.contextIdMax)
 				throw new ContextIdOverflowException();
 
 			_contextId = contextId;
-			_contextIdMask = contextId << Entity.slotBits;
+			_contextIdShift = contextId << Entity.slotBits;
 			_name = name;
 
-			_entities = new EntityData[_defaultCapacity];
+			_entities = new EntityDataList(_contextIdShift);
+
+			//TODO _components
 		}
 
 		public Entity Create(string name = null)
 		{
-			lock (_syncObject)
-			{
-				_lastEntityId++;
-
-				var id = _lastEntityId;
-				int slot = FindEmptySlot(id);
-
-				var entity = new Entity(id, slot, _contextIdMask);
-				_entities[slot] = new EntityData(entity, name);
-				_entityCount++;
-
-				return entity;
-			}
-		}
-
-		private int FindEmptySlot(int id)
-		{
-			int slot;
-			int capacity = _entities.Length;
-
-			if (_entityCount < capacity)
-			{
-				int start = id % _slotModDenominator % capacity;
-				slot = start;
-
-				// find empty slot, at _findEmptySlotStep
-				for (;;)
-				{
-					if (_entities[slot].IsEmpty())
-						break;
-
-					slot = (slot + _findEmptySlotStep) % capacity;
-					if (slot == start)
-						throw new EntityContainerException();
-				}
-			}
-			else
-			{
-				// enlarge the entity list when full
-				slot = capacity;
-				Array.Resize(ref _entities, capacity * 2);
-			}
-
-			return slot;
+			return _entities.Create(name);
 		}
 
 		public bool Destroy(Entity e)
 		{
-			lock (_syncObject)
-			{
-				if (!Contains(e))
-					return false;
+			if (!Contains(e))
+				return false;
 
-				// destroy all components 
-				foreach (var array in _components)
-					array.Remove(e.slot);
+			// could destroy entity first?
+			foreach (var array in _components)
+				array.Remove(e.slot);
 
-				// remove entity
-				int slot = e.location & Entity.slotMask;
-				_entities[slot] = EntityData.Empty;
-				_entityCount--;
+			return _entities.Destroy(e);
+		}
 
-				return true;
-			}
+		public void SetName(Entity e, string name)
+		{
+			_entities.SetName(e, name);
 		}
 
 		public bool Contains(Entity e)
 		{
-			if (e.id <= 0 || e.location <= 0 || (e.location & Entity.contextIdMask) != _contextIdMask)
-				return false;
-
-			int slot = e.location & Entity.slotMask;
-			if (slot >= _entities.Length)
-				return false;
-
-			return _entities[slot].entity == e;
+			return _entities.Contains(e);
 		}
 
 		public bool GetComponent<T>(Entity e, out T value) where T : struct, IComponent

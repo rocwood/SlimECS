@@ -2,13 +2,13 @@ using System;
 
 namespace microECS
 {
-	internal interface IComponentDataArray
+	interface IComponentDataArray
 	{
 		bool Has(int index);
 		bool Remove(int index);
 	}
 
-	internal class ComponentDataArray<T> : IComponentDataArray where T:struct, IComponent
+	class ComponentDataArray<T> : IComponentDataArray where T:struct, IComponent
 	{
 		private const int _defaultCapacity = 256;
 		private const int _maxCapacity = 0x7FEFFFFF;

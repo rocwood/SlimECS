@@ -18,11 +18,12 @@ namespace microECS
         internal readonly int location; // 1 bit sign, 7 bits contextId, 24 bits slot-index
 
 		internal int slot => location & slotMask;
+		internal int contextIdShift => location & contextIdMask;
 
-        internal Entity(int id, int slot, int contextIdMask)
+		internal Entity(int id, int slot, int contextIdShift)
         {
             this.id = id;
-            this.location = slot | contextIdMask;
+            this.location = slot | contextIdShift;
         }
 
         public override bool Equals(object obj)
