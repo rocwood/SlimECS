@@ -8,7 +8,7 @@ namespace microECS
 		private readonly int _contextIdShift;
 		private readonly string _name;
 
-		private readonly IComponentDataArray[] _components;
+		private readonly IComponentDataList[] _components;
 		private readonly EntityDataList _entities;
 
 		internal Context(int contextId, string name)
@@ -60,14 +60,14 @@ namespace microECS
 				return false;
 			}
 
-			var array = GetComponentDataArray<T>();
-			if (array == null)
+			var c = GetComponentDataList<T>();
+			if (c == null)
 			{
 				value = default;
 				return false;
 			}
 
-			return array.Get(e.slot, out value);
+			return c.Get(e.slot, out value);
 		}
 
 		public T GetComponent<T>(Entity e) where T : struct, IComponent
@@ -75,11 +75,11 @@ namespace microECS
 			if (!Contains(e))
 				return default;
 
-			var array = GetComponentDataArray<T>();
-			if (array == null)
+			var c = GetComponentDataList<T>();
+			if (c == null)
 				return default;
 
-			array.Get(e.slot, out var value);
+			c.Get(e.slot, out var value);
 			return value;
 		}
 
@@ -88,11 +88,11 @@ namespace microECS
 			if (!Contains(e))
 				return false;
 
-			var array = GetComponentDataArray<T>();
-			if (array == null)
+			var c = GetComponentDataList<T>();
+			if (c == null)
 				return false;
 
-			array.Set(e.slot, value);
+			c.Set(e.slot, value);
 			return true;
 		}
 
@@ -101,21 +101,21 @@ namespace microECS
 			if (!Contains(e))
 				return false;
 
-			var array = GetComponentDataArray<T>();
-			if (array == null)
+			var c = GetComponentDataList<T>();
+			if (c == null)
 				return false;
 
-			return array.Remove(e.location & Entity.slotMask);
+			return c.Remove(e.slot);
 		}
 
-		private ComponentDataArray<T> GetComponentDataArray<T>() where T : struct, IComponent
+		private ComponentDataList<T> GetComponentDataList<T>() where T : struct, IComponent
 		{
 			int componentIndex = 0;
 			
 			// TODO
 
-			var array = _components[componentIndex];
-			return array as ComponentDataArray<T>;
+			var c = _components[componentIndex];
+			return c as ComponentDataList<T>;
 		}
 	}
 }
