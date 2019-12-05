@@ -1,5 +1,3 @@
-using System;
-
 namespace microECS
 {
 	interface IComponentDataList
@@ -8,22 +6,25 @@ namespace microECS
 		bool Remove(int index);
 	}
 
-	class ComponentDataList<T> : IComponentDataList where T:struct, IComponent
+	interface IComponentDataList<T> : IComponentDataList
 	{
-		private const int _defaultCapacity = 256;
-		private const int _maxCapacity = 0x7FEFFFFF;
+		bool Get(int index, out T value);
+		void Set(int index, T value);
+	}
 
+	class ComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
+	{
 		struct ComponentData
 		{
 			public bool hasValue;
 			public T component;
 		}
 
-		private ComponentData[] _data;
+		private StructArray<ComponentData> _data;
 
 		public ComponentDataList()
 		{
-			_data = new ComponentData[0];
+			_data = new StructArray<ComponentData>(0);
 		}
 
 		public bool Has(int index)
@@ -31,7 +32,7 @@ namespace microECS
 			if (index < 0 || index >= _data.Length)
 				return false;
 
-			return _data[index].hasValue;
+			return _data.Ref(index).hasValue;
 		}
 
 		public bool Get(int index, out T value)
@@ -42,7 +43,7 @@ namespace microECS
 				return false;
 			}
 
-			ref var d = ref _data[index];
+			ref var d = ref _data.Ref(index);
 			if (!d.hasValue)
 			{
 				value = default;
@@ -58,28 +59,9 @@ namespace microECS
 			if (index < 0)
 				return;
 
-			if (index >= _data.Length)
-			{
-				int size = _data.Length;
-				while (index >= size)
-				{
-					if (size <= 0)
-						size = _defaultCapacity;
-					else
-						size *= 2;
+			_data.EnsureAccess(index);
 
-					if ((uint)size > _maxCapacity)
-					{
-						size = _maxCapacity;
-						break;
-					}
-				}
-
-				if (size > _data.Length)
-					Array.Resize(ref _data, size);
-			}
-
-			ref var d = ref _data[index];
+			ref var d = ref _data.Ref(index);
 			d.component = value;
 			d.hasValue = true;
 		}
@@ -91,11 +73,56 @@ namespace microECS
 
 			// TODO: onRemove
 
-			ref var d = ref _data[index];
+			ref var d = ref _data.Ref(index);
 			if (!d.hasValue)
 				return false;
 
 			_data[index] = default;
+			return true;
+		}
+	}
+
+	class ZeroSizeComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
+	{
+		private StructArray<bool> _data;
+
+		public ZeroSizeComponentDataList()
+		{
+			_data = new StructArray<bool>(0);
+		}
+
+		public bool Has(int index)
+		{
+			if (index < 0 || index >= _data.Length)
+				return false;
+
+			return _data[index];
+		}
+
+		public bool Get(int index, out T value)
+		{
+			value = default;
+
+			return Has(index);
+		}
+
+		public void Set(int index, T value)
+		{
+			if (index < 0)
+				return;
+
+			_data.EnsureAccess(index);
+			_data[index] = true;
+		}
+
+		public bool Remove(int index)
+		{
+			if (index < 0 || index >= _data.Length)
+				return false;
+
+			// TODO: onRemove
+
+			_data[index] = false;
 			return true;
 		}
 	}

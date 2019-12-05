@@ -16,13 +16,21 @@ namespace microECS
 			if (contextId < 0 || contextId >= Entity.contextIdMax)
 				throw new ContextIdOverflowException();
 
+			// context base info
 			_contextId = contextId;
 			_contextIdShift = contextId << Entity.slotBits;
 			_name = name;
 
+			// setup entities container
 			_entities = new EntityDataList(_contextIdShift);
 
-			//TODO _components
+			// setup components container
+			var componentInfoList = ContextInfo.GetComponentInfoList();
+			int count = componentInfoList.Length;
+
+			_components = new IComponentDataList[count];
+			for (int i = 0; i < count; i++)
+				_components[i] = CreateComponentDataList(componentInfoList[i]);
 		}
 
 		public Entity Create(string name = null)
@@ -52,6 +60,18 @@ namespace microECS
 			return _entities.Contains(e);
 		}
 
+		public bool HasComponent<T>(Entity e) where T : struct, IComponent
+		{
+			if (!Contains(e))
+				return false;
+
+			var c = GetComponentDataList<T>();
+			if (c == null)
+				return false;
+
+			return c.Has(e.slot);
+		}
+
 		public bool GetComponent<T>(Entity e, out T value) where T : struct, IComponent
 		{
 			if (!Contains(e))
@@ -68,19 +88,6 @@ namespace microECS
 			}
 
 			return c.Get(e.slot, out value);
-		}
-
-		public T GetComponent<T>(Entity e) where T : struct, IComponent
-		{
-			if (!Contains(e))
-				return default;
-
-			var c = GetComponentDataList<T>();
-			if (c == null)
-				return default;
-
-			c.Get(e.slot, out var value);
-			return value;
 		}
 
 		public bool SetComponent<T>(Entity e, T value) where T : struct, IComponent
@@ -108,14 +115,29 @@ namespace microECS
 			return c.Remove(e.slot);
 		}
 
-		private ComponentDataList<T> GetComponentDataList<T>() where T : struct, IComponent
+		private IComponentDataList<T> GetComponentDataList<T>() where T : struct, IComponent
 		{
-			int componentIndex = 0;
-			
-			// TODO
+			int componentIndex = ContextInfo.GetIndexOf<T>();
+			if (componentIndex < 0 || componentIndex >= _components.Length)
+				return null;
 
 			var c = _components[componentIndex];
-			return c as ComponentDataList<T>;
+			return c as IComponentDataList<T>;
+		}
+
+		private IComponentDataList CreateComponentDataList(ComponentTypeInfo info)
+		{
+			if (info == null || info.type == null)
+				return null;
+
+			var cType = info.zeroSize
+				? typeof(ZeroSizeComponentDataList<>).MakeGenericType(info.type) // TODO: check il2cpp failure
+				: typeof(ComponentDataList<>).MakeGenericType(info.type);
+
+			if (cType == null)
+				return null;
+
+			return (IComponentDataList)Activator.CreateInstance(cType);
 		}
 	}
 }
