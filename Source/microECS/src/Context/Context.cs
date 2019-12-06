@@ -92,7 +92,7 @@ namespace microECS
 
 		public bool SetComponent<T>(Entity e, T value) where T : struct, IComponent
 		{
-			if (!Contains(e))
+			if (!Contains(e)) 
 				return false;
 
 			var c = GetComponentDataList<T>();

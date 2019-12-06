@@ -2,10 +2,10 @@ using System;
 
 namespace microECS
 {
-	class StructArray<T> where T : struct
+	public class StructArray<T> where T : struct
 	{
-		private const int _defaultCapacity = 256;
-		private const int _maxCapacity = 0x7FEFFFFF;
+		private const int DefaultCapacity = 256;
+		private const int MaxCapacity = 0x7FEFFFFF;
 
 		private T[] _items;
 
@@ -13,6 +13,8 @@ namespace microECS
 		{
 			if (capacity < 0)
 				capacity = 0;
+			else if ((uint)capacity > MaxCapacity)
+				capacity = MaxCapacity;
 
 			_items = new T[capacity];
 		}
@@ -36,13 +38,13 @@ namespace microECS
 			while (index >= size)
 			{
 				if (size <= 0)
-					size = _defaultCapacity;
+					size = DefaultCapacity;
 				else
 					size *= 2;
 
-				if ((uint)size > _maxCapacity)
+				if ((uint)size > MaxCapacity)
 				{
-					size = _maxCapacity;
+					size = MaxCapacity;
 					break;
 				}
 			}

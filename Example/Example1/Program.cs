@@ -1,6 +1,6 @@
 using System;
 
-namespace MicroECS.Example
+namespace microECS.Example
 {
 	class Program
 	{

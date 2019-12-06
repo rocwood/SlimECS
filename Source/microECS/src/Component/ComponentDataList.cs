@@ -1,18 +1,6 @@
 namespace microECS
 {
-	interface IComponentDataList
-	{
-		bool Has(int index);
-		bool Remove(int index);
-	}
-
-	interface IComponentDataList<T> : IComponentDataList
-	{
-		bool Get(int index, out T value);
-		void Set(int index, T value);
-	}
-
-	class ComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
+	public class ComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
 	{
 		struct ComponentData
 		{
@@ -78,51 +66,6 @@ namespace microECS
 				return false;
 
 			_data[index] = default;
-			return true;
-		}
-	}
-
-	class ZeroSizeComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
-	{
-		private StructArray<bool> _data;
-
-		public ZeroSizeComponentDataList()
-		{
-			_data = new StructArray<bool>(0);
-		}
-
-		public bool Has(int index)
-		{
-			if (index < 0 || index >= _data.Length)
-				return false;
-
-			return _data[index];
-		}
-
-		public bool Get(int index, out T value)
-		{
-			value = default;
-
-			return Has(index);
-		}
-
-		public void Set(int index, T value)
-		{
-			if (index < 0)
-				return;
-
-			_data.EnsureAccess(index);
-			_data[index] = true;
-		}
-
-		public bool Remove(int index)
-		{
-			if (index < 0 || index >= _data.Length)
-				return false;
-
-			// TODO: onRemove
-
-			_data[index] = false;
 			return true;
 		}
 	}
