@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace microECS
 {
-	class ComponentTypeInfo
+	public class ComponentTypeInfo
 	{
 		public readonly Type type;
 		public readonly int index;
@@ -18,44 +18,16 @@ namespace microECS
 		}
 	}
 
-	class ContextInfo
+	public class ContextInfo
 	{
 		private static ComponentTypeInfo[] _componentInfoList;
 
 		public static ComponentTypeInfo[] GetComponentInfoList()
 		{
 			if (_componentInfoList == null)
-				CollectComponents();
+				_componentInfoList = CollectComponents();
 
 			return _componentInfoList;
-		}
-
-		private static void CollectComponents()
-		{
-			var baseType = typeof(IComponent);
-
-			// TODO: skip some types via Attribute
-			var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes())
-				.Where(t => t.IsValueType && !t.IsPrimitive && t.IsPublic && baseType.IsAssignableFrom(t))
-				.ToArray();
-
-			Array.Sort(types, (x, y) => string.CompareOrdinal(x.FullName, y.FullName));
-
-			_componentInfoList = new ComponentTypeInfo[types.Length];
-
-			for (int i = 0; i < types.Length; i++)
-			{
-				var t = types[i];
-				_componentInfoList[i] = new ComponentTypeInfo(t, i, IsZeroSizeStruct(t));
-			}
-		}
-
-		// https://stackoverflow.com/a/27851610
-		private static bool IsZeroSizeStruct(Type t)
-		{
-			return t.IsValueType && !t.IsPrimitive &&
-					t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-						.All(fi => IsZeroSizeStruct(fi.FieldType));
 		}
 
 		public static int GetIndexOf<T>() where T : struct, IComponent
@@ -71,9 +43,43 @@ namespace microECS
 		{
 			ref var info = ref ComponentTypeInfo<T>.info;
 			if (info == null)
+			{
+				if (_componentInfoList == null)
+					_componentInfoList = CollectComponents();
+
 				info = Array.Find(_componentInfoList, x => x.type == typeof(T));
+			}
 
 			return info;
+		}
+
+		private static ComponentTypeInfo[] CollectComponents()
+		{
+			var baseType = typeof(IComponent);
+
+			// TODO: skip some types via Attribute
+			var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes())
+				.Where(t => t.IsValueType && !t.IsPrimitive && t.IsPublic && baseType.IsAssignableFrom(t))
+				.ToArray();
+
+			Array.Sort(types, (x, y) => string.CompareOrdinal(x.FullName, y.FullName));
+
+			var list = new ComponentTypeInfo[types.Length];
+			for (int i = 0; i < types.Length; i++)
+			{
+				var t = types[i];
+				list[i] = new ComponentTypeInfo(t, i, IsZeroSizeStruct(t));
+			}
+
+			return list;
+		}
+
+		// https://stackoverflow.com/a/27851610
+		private static bool IsZeroSizeStruct(Type t)
+		{
+			return t.IsValueType && !t.IsPrimitive 
+				&& t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+					.All(field => IsZeroSizeStruct(field.FieldType));
 		}
 
 		class ComponentTypeInfo<T> where T : struct, IComponent

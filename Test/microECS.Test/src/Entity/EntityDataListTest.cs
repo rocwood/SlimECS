@@ -14,7 +14,6 @@ namespace microECS.Test
 
 			var list = new EntityDataList(contextIdShift);
 
-			Assert.AreEqual(0, list.Count);
 
 			var e1 = list.Create(null);
 			Assert.AreEqual(1, list.Count);
@@ -98,6 +97,11 @@ namespace microECS.Test
 			}
 
 			Assert.AreEqual(world.Count, list.Count);
+
+			foreach (var e in world)
+			{
+				Assert.IsTrue(list.Contains(e));
+			}
 		}
 	}
 }

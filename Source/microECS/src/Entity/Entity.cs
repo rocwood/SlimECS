@@ -12,10 +12,10 @@ namespace microECS
 		public const int slotMax = 1 << slotBits;
 		public const int slotMask = slotMax - 1;
 
-		public static Entity Empty = new Entity();
+		public static readonly Entity Empty = new Entity();
 
 		public readonly int id;
-        internal readonly int location; // 1 bit sign, 7 bits contextId, 24 bits slot-index
+		internal readonly int location; // 1 bit sign, 7 bits contextId, 24 bits slot-index
 
 		internal int slot => location & slotMask;
 		internal int contextIdShift => location & contextIdMask;

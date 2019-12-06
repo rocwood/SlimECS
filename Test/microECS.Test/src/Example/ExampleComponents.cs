@@ -1,7 +1,7 @@
 
 namespace microECS.Test
 {
-	public struct Vector3 : IComponent
+	public struct Vector3
 	{
 		public float x, y, z;
 	}
@@ -19,5 +19,10 @@ namespace microECS.Test
 
 	public struct Frozen : IComponent
 	{
+	}
+
+	public struct ComplexStatus : IComponent
+	{
+		public Frozen status1;
 	}
 }
