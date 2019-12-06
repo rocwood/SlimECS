@@ -4,13 +4,13 @@ namespace microECS
 {
     public struct Entity : IEquatable<Entity>
     {
-		internal const int contextIdBits = 7;
-		internal const int contextIdMax = 1 << contextIdBits;
-		internal const int contextIdMask = (contextIdMax - 1) << slotBits;
-
-		internal const int slotBits = 31 - contextIdBits;
-		internal const int slotMax = 1 << slotBits;
-		internal const int slotMask = slotMax - 1;
+		public const int contextIdBits = 7;
+		public const int contextIdMax = 1 << contextIdBits;
+		public const int contextIdMask = (contextIdMax - 1) << slotBits;
+		
+		public const int slotBits = 31 - contextIdBits;
+		public const int slotMax = 1 << slotBits;
+		public const int slotMask = slotMax - 1;
 
 		public static Entity Empty = new Entity();
 
