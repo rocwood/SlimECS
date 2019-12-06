@@ -11,7 +11,7 @@ namespace SlimECS
 		private readonly IComponentDataList[] _components;
 		private readonly EntityDataList _entities;
 
-		internal Context(int contextId, string name)
+		public Context(int contextId, string name)
 		{
 			if (contextId < 0 || contextId >= Entity.contextIdMax)
 				throw new ContextIdOverflowException();
@@ -32,6 +32,8 @@ namespace SlimECS
 			for (int i = 0; i < count; i++)
 				_components[i] = CreateComponentDataList(componentInfoList[i]);
 		}
+
+		public int Count => _entities.Count;
 
 		public Entity Create(string name = null)
 		{

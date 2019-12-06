@@ -1,11 +1,6 @@
 
 namespace SlimECS.Test
 {
-	public struct Vector3
-	{
-		public float x, y, z;
-	}
-
 	public struct Position : IComponent
 	{
 		public Vector3 pos;
