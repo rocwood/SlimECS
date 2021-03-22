@@ -58,7 +58,9 @@ namespace SlimECS
 			var baseType = typeof(IComponent);
 
 			// TODO: skip some types via Attribute
-			var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes())
+			var types = AppDomain.CurrentDomain.GetAssemblies()
+				.Where(s => !s.FullName.StartsWith("System.") && !s.FullName.StartsWith("SlimECS."))
+				.SelectMany(s => s.GetTypes())
 				.Where(t => t.IsValueType && !t.IsPrimitive && t.IsPublic && baseType.IsAssignableFrom(t))
 				.ToArray();
 

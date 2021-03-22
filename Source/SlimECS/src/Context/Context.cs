@@ -35,7 +35,7 @@ namespace SlimECS
 
 		public int Count => _entities.Count;
 
-		public Entity Create(string name = null)
+		public Entity CreateEntity(string name = null)
 		{
 			return _entities.Create(name);
 		}
@@ -92,6 +92,19 @@ namespace SlimECS
 			return c.Get(e.slot, out value);
 		}
 
+		public T GetComponent<T>(Entity e) where T : struct, IComponent
+		{
+			if (!Contains(e))
+				return default;
+
+			var c = GetComponentDataList<T>();
+			if (c == null)
+				return default;
+
+			c.Get(e.slot, out var value);
+			return value;
+		}
+
 		public bool SetComponent<T>(Entity e, T value) where T : struct, IComponent
 		{
 			if (!Contains(e)) 
@@ -115,6 +128,11 @@ namespace SlimECS
 				return false;
 
 			return c.Remove(e.slot);
+		}
+
+		public void Poll()
+		{
+			// TODO
 		}
 
 		private IComponentDataList<T> GetComponentDataList<T>() where T : struct, IComponent
