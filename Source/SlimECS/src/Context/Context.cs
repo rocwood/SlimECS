@@ -32,11 +32,13 @@ namespace SlimECS
 		public void Destroy(Entity e) => _entities.Destroy(e);
 
 		public void SetName(Entity e, string name) => _entities.SetName(e, name);
-		public bool Contains(Entity e) => _entities.Contains(e);
+		public bool IsActive(Entity e) => _entities.IsActive(e);
 
 		public void Poll()
 		{
 			// TODO
+
+			_entities.CollectDestroyEntities();
 		}
 
 		private IComponentDataList<T> GetComponentDataList<T>() where T : struct, IComponent

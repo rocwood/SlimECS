@@ -47,7 +47,7 @@ namespace SlimECS
 
 		internal bool IsMatch(Entity e, Matcher matcher)
 		{
-			if (!Contains(e))
+			if (!IsActive(e))
 				return false;
 
 			return (matcher.all == null || HasAllComponents(e, matcher.all))

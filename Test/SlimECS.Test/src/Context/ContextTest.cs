@@ -14,36 +14,36 @@ namespace SlimECS.Test
 
 			var e1 = context.Create();
 			Assert.AreEqual(1, context.Count);
-			Assert.IsTrue(context.Contains(e1));
+			Assert.IsTrue(context.IsActive(e1));
 
 			var e2 = context.Create();
 			Assert.AreEqual(2, context.Count);
-			Assert.IsTrue(context.Contains(e2));
+			Assert.IsTrue(context.IsActive(e2));
 
 			var e3 = context.Create();
 			Assert.AreEqual(3, context.Count);
-			Assert.IsTrue(context.Contains(e3));
+			Assert.IsTrue(context.IsActive(e3));
 
 			context.Destroy(e2);
 			Assert.AreEqual(2, context.Count);
-			Assert.IsFalse(context.Contains(e2));
-			Assert.IsTrue(context.Contains(e1));
-			Assert.IsTrue(context.Contains(e3));
+			Assert.IsFalse(context.IsActive(e2));
+			Assert.IsTrue(context.IsActive(e1));
+			Assert.IsTrue(context.IsActive(e3));
 
 			context.Destroy(e2);
 			Assert.AreEqual(2, context.Count);
-			Assert.IsFalse(context.Contains(e2));
+			Assert.IsFalse(context.IsActive(e2));
 
 			var e4 = context.Create();
 			Assert.AreEqual(3, context.Count);
-			Assert.IsTrue(context.Contains(e4));
+			Assert.IsTrue(context.IsActive(e4));
 
 			context.Destroy(e1);
 			context.Destroy(e3);
 			Assert.AreEqual(1, context.Count);
-			Assert.IsFalse(context.Contains(e1));
-			Assert.IsFalse(context.Contains(e3));
-			Assert.IsTrue(context.Contains(e4));
+			Assert.IsFalse(context.IsActive(e1));
+			Assert.IsFalse(context.IsActive(e3));
+			Assert.IsTrue(context.IsActive(e4));
 		}
 
 		private Position empty = new Position();
@@ -59,7 +59,7 @@ namespace SlimECS.Test
 
 			var e1 = context.Create();
 
-			Assert.IsTrue(context.Contains(e1));
+			Assert.IsTrue(context.IsActive(e1));
 
 			context.SetComponent<Position>(e1, cp1);
 			context.SetComponent<Velocity>(e1, cv1);

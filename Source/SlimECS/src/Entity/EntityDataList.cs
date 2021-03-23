@@ -7,7 +7,11 @@ namespace SlimECS
 		private const int DefaultCapacity = 256;
 		private const int MaxCapacity = 0x7FEFFFFF;
 
+		private const byte FlagToDestroy = 1;
+		private const byte FlagChanged = 2;
+
 		private int[] _entities;
+		private byte[] _flags;
 		private string[] _names;
 
 		private int _lastId = 0;
@@ -21,6 +25,7 @@ namespace SlimECS
 				capacity = DefaultCapacity;
 
 			_entities = new int[capacity];
+			_flags = new byte[capacity];
 			_names = new string[capacity];
 
 			// init free-slot links
@@ -43,38 +48,28 @@ namespace SlimECS
 
 			_entities[slot] = id;
 			_names[slot] = name;
+			_flags[slot] = FlagChanged;
 
 			_entityCount++;
 
 			return new Entity(id, slot);
 		}
 
-		public void Destroy(Entity e)
-		{
-			if (!Contains(e))
-				return;
-
-			_entities[e.slot] = -_freeSlotHead;
-			_names[e.slot] = null;
-
-			_freeSlotHead = e.slot;
-			_entityCount--;
-		}
-
 		public void SetName(Entity e, string name)
 		{
-			if (!Contains(e))
+			if (!IsActive(e))
 				return;
 
 			_names[e.slot] = name;
 		}
 
-		public bool Contains(Entity e)
+		public bool IsActive(Entity e)
 		{
 			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
 				return false;
 
-			return _entities[e.slot] == e.id;
+			return _entities[e.slot] == e.id 
+				&& (_flags[e.slot]&FlagToDestroy) == 0;
 		}
 
 		private void EnsureAccess(int index)
@@ -100,7 +95,32 @@ namespace SlimECS
 			if (size > _entities.Length)
 			{
 				Array.Resize(ref _entities, size);
+				Array.Resize(ref _flags, size);
 				Array.Resize(ref _names, size);
+			}
+		}
+
+		public void Destroy(Entity e)
+		{
+			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
+				return;
+
+			_flags[e.slot] = FlagChanged | FlagToDestroy;
+		}
+
+		internal void CollectDestroyEntities()
+		{
+			for (int slot = 0; slot < _entities.Length; slot++)
+			{
+				if (_entities[slot] > 0 && (_flags[slot] & FlagToDestroy) != 0)
+				{
+					_entities[slot] = -_freeSlotHead;
+					_names[slot] = null;
+					_flags[slot] = 0;
+
+					_freeSlotHead = slot;
+					_entityCount--;
+				}
 			}
 		}
 	}
