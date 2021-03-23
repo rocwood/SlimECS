@@ -3,7 +3,7 @@ using SlimECS.Utils;
 
 namespace SlimECS
 {
-	public class Matcher
+	class Matcher
 	{
 		internal List<int> all;
 		internal List<int> any;

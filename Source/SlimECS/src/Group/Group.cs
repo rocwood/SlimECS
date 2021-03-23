@@ -19,45 +19,45 @@ namespace SlimECS
 			_matcher = matcher;
 		}
 
-		internal void HandleEntity(Entity entity)
+		internal void HandleEntity(Entity e)
 		{
-			if (entity == null)
+			if (e.id <= 0)
 				return;
 
-			if (_context.IsMatch(entity, _matcher))
-				HandleAddEntity(entity);
+			if (_context.IsMatch(e, _matcher))
+				HandleAddEntity(e);
 			else
-				HandleRemoveEntity(entity);
+				HandleRemoveEntity(e);
 		}
 
-		private void HandleAddEntity(Entity entity)
+		private void HandleAddEntity(Entity e)
 		{
-			_entities.TryGetValue(entity.id, out var item);
-			if (entity == item)
+			_entities.TryGetValue(e.id, out var item);
+			if (e == item)
 				return;
 
-			_entities[entity.id] = entity;
+			_entities[e.id] = e;
 
 			_hasCached = false;
 		}
 
-		private void HandleRemoveEntity(Entity entity)
+		private void HandleRemoveEntity(Entity e)
 		{
-			if (!_entities.Remove(entity.id))
+			if (!_entities.Remove(e.id))
 				return;
 				
 			_hasCached = false;
 		}
 
-		public bool Contains(Entity entity)
+		public bool Contains(Entity e)
 		{
-			if (entity == null)
+			if (e.id <= 0)
 				return false;
 
-			if (!_entities.TryGetValue(entity.id, out var item))
+			if (!_entities.TryGetValue(e.id, out var item))
 				return false;
 
-			return entity == item;
+			return e == item;
 		}
 
 		public IReadOnlyList<Entity> GetEntities()
