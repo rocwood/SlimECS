@@ -1,14 +1,16 @@
 namespace SlimECS
 {
-	public interface IComponentDataList
+	internal interface IComponentDataList
 	{
-		bool Has(int index);
-		bool Remove(int index);
+		bool Has(int entityId, int slot);
+		bool Remove(int entityId, int slot);
 	}
 
-	public interface IComponentDataList<T> : IComponentDataList
+	internal interface IComponentDataList<T> : IComponentDataList
 	{
-		bool Get(int index, out T value);
-		void Set(int index, T value);
+		void Set(int entityId, int slot, T value);
+
+		bool Get(int entityId, int slot, out T value);
+		T Get(int entityId, int slot);
 	}
 }

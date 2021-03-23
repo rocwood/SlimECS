@@ -1,10 +1,10 @@
 namespace SlimECS
 {
-	public class ComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
+	internal class ComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
 	{
 		struct ComponentData
 		{
-			public bool hasValue;
+			public int entityId;
 			public T component;
 		}
 
@@ -15,24 +15,24 @@ namespace SlimECS
 			_data = new StructArray<ComponentData>(0);
 		}
 
-		public bool Has(int index)
+		public bool Has(int entityId, int slot)
 		{
-			if (index < 0 || index >= _data.Length)
+			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
 				return false;
 
-			return _data.Ref(index).hasValue;
+			return _data.Ref(slot).entityId == entityId;
 		}
 
-		public bool Get(int index, out T value)
+		public bool Get(int entityId, int slot, out T value)
 		{
-			if (index < 0 || index >= _data.Length)
+			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
 			{
 				value = default;
 				return false;
 			}
 
-			ref var d = ref _data.Ref(index);
-			if (!d.hasValue)
+			ref var d = ref _data.Ref(slot);
+			if (d.entityId != entityId)
 			{
 				value = default;
 				return false;
@@ -42,30 +42,38 @@ namespace SlimECS
 			return true;
 		}
 
-		public void Set(int index, T value)
+		public T Get(int entityId, int slot)
 		{
-			if (index < 0)
-				return;
+			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
+				return default;
 
-			_data.EnsureAccess(index);
+			ref var d = ref _data.Ref(slot);
+			if (d.entityId != entityId)
+				return default;
 
-			ref var d = ref _data.Ref(index);
-			d.component = value;
-			d.hasValue = true;
+			return d.component;
 		}
 
-		public bool Remove(int index)
+		public void Set(int entityId, int slot, T value)
 		{
-			if (index < 0 || index >= _data.Length)
+			if (entityId <= 0 || slot < 0)
+				return;
+
+			_data.EnsureAccess(slot);
+
+			ref var d = ref _data.Ref(slot);
+			d.component = value;
+			d.entityId = entityId;
+		}
+
+		public bool Remove(int entityId, int slot)
+		{
+			if (!Has(entityId, slot))
 				return false;
 
 			// TODO: onRemove
 
-			ref var d = ref _data.Ref(index);
-			if (!d.hasValue)
-				return false;
-
-			_data[index] = default;
+			_data[slot] = default;
 			return true;
 		}
 	}

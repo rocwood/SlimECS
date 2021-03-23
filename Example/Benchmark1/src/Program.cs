@@ -92,7 +92,7 @@ namespace SlimECS.Benchmark
 
 		private void Spawn(float x, float y, Random random)
 		{
-			var child = context.CreateEntity();
+			var child = context.Create();
 
 			context.SetComponent(child, new LifeTime { ticks = random.Next(1, maxChildLifeTime) });
 			context.SetComponent(child, new Position { x = x, y = y });
@@ -112,7 +112,7 @@ namespace SlimECS.Benchmark
 		{
 			context = new Context(0, "Default");
 
-			var e = context.CreateEntity();
+			var e = context.Create();
 
 			context.SetComponent(e, new Position()); // x = y = 0, without Velocity
 			context.SetComponent(e, new LifeTime()); // ticks = 0

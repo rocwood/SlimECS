@@ -2,29 +2,21 @@ using System;
 
 namespace SlimECS
 {
-	public class Context
+	public partial class Context
 	{
-		private readonly int _contextId;
-		private readonly int _contextIdShift;
+		public static int DefaultCapacity = 256;
+
 		private readonly string _name;
 
 		private readonly IComponentDataList[] _components;
 		private readonly EntityDataList _entities;
 
-		public Context(int contextId, string name)
+		public Context(string name)
 		{
-			if (contextId < 0 || contextId >= Entity.contextIdMax)
-				throw new ContextIdOverflowException();
-
-			// context base info
-			_contextId = contextId;
-			_contextIdShift = contextId << Entity.slotBits;
 			_name = name;
 
-			// setup entities container
-			_entities = new EntityDataList(_contextIdShift);
+			_entities = new EntityDataList(DefaultCapacity);
 
-			// setup components container
 			var componentInfoList = ContextInfo.GetComponentInfoList();
 			int count = componentInfoList.Length;
 
@@ -34,101 +26,13 @@ namespace SlimECS
 		}
 
 		public int Count => _entities.Count;
+		public string Name => _name;
 
-		public Entity CreateEntity(string name = null)
-		{
-			return _entities.Create(name);
-		}
+		public Entity Create(string name = null) => _entities.Create(name);
+		public void Destroy(Entity e) => _entities.Destroy(e);
 
-		public bool Destroy(Entity e)
-		{
-			if (!Contains(e))
-				return false;
-
-			// could destroy entity first?
-			foreach (var array in _components)
-				array.Remove(e.slot);
-
-			return _entities.Destroy(e);
-		}
-
-		public void SetName(Entity e, string name)
-		{
-			_entities.SetName(e, name);
-		}
-
-		public bool Contains(Entity e)
-		{
-			return _entities.Contains(e);
-		}
-
-		public bool HasComponent<T>(Entity e) where T : struct, IComponent
-		{
-			if (!Contains(e))
-				return false;
-
-			var c = GetComponentDataList<T>();
-			if (c == null)
-				return false;
-
-			return c.Has(e.slot);
-		}
-
-		public bool GetComponent<T>(Entity e, out T value) where T : struct, IComponent
-		{
-			if (!Contains(e))
-			{
-				value = default;
-				return false;
-			}
-
-			var c = GetComponentDataList<T>();
-			if (c == null)
-			{
-				value = default;
-				return false;
-			}
-
-			return c.Get(e.slot, out value);
-		}
-
-		public T GetComponent<T>(Entity e) where T : struct, IComponent
-		{
-			if (!Contains(e))
-				return default;
-
-			var c = GetComponentDataList<T>();
-			if (c == null)
-				return default;
-
-			c.Get(e.slot, out var value);
-			return value;
-		}
-
-		public bool SetComponent<T>(Entity e, T value) where T : struct, IComponent
-		{
-			if (!Contains(e)) 
-				return false;
-
-			var c = GetComponentDataList<T>();
-			if (c == null)
-				return false;
-
-			c.Set(e.slot, value);
-			return true;
-		}
-
-		public bool RemoveComponent<T>(Entity e) where T : struct, IComponent
-		{
-			if (!Contains(e))
-				return false;
-
-			var c = GetComponentDataList<T>();
-			if (c == null)
-				return false;
-
-			return c.Remove(e.slot);
-		}
+		public void SetName(Entity e, string name) => _entities.SetName(e, name);
+		public bool Contains(Entity e) => _entities.Contains(e);
 
 		public void Poll()
 		{

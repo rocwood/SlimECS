@@ -2,65 +2,63 @@ using System;
 
 namespace SlimECS
 {
-	public class EntityDataList
+	class EntityDataList
 	{
-		private const int DefaultCapacity = 1024;
-		private const int SlotModDenominator = 997;
-		private const int FindEmptySlotStep = 31;
-		private const float EnlargeThresold = 0.8f;
+		private const int DefaultCapacity = 256;
+		private const int MaxCapacity = 0x7FEFFFFF;
 
-		struct EntityData
-		{
-			public readonly int id;
-			public string name;
+		private int[] _entities;
+		private string[] _names;
 
-			public EntityData(int id, string name)
-			{
-				this.id = id;
-				this.name = name;
-			}
-
-			public static readonly EntityData Empty = new EntityData();
-		}
-
-		private EntityData[] _entities;
-
+		private int _lastId = 0;
 		private int _entityCount = 0;
-		private int _lastEntityId = 0;
 
-		private readonly int _contextIdShift;
+		private int _freeSlotHead = 0;
+
+		public EntityDataList(int capacity)
+		{
+			if (capacity <= 0)
+				capacity = DefaultCapacity;
+
+			_entities = new int[capacity];
+			_names = new string[capacity];
+
+			// init free-slot links
+			for (int i = 0; i < capacity; i++)
+				_entities[i] = -(i + 1);
+
+			_freeSlotHead = 0;
+		}
 
 		public int Count => _entityCount;
 
-		public EntityDataList(int contextIdShift)
-		{
-			_contextIdShift = contextIdShift;
-
-			_entities = new EntityData[DefaultCapacity];
-		}
-
 		public Entity Create(string name)
 		{	
-			_lastEntityId++;
+			var id = _lastId++;
+			int slot = _freeSlotHead;
 
-			var id = _lastEntityId;
-			int slot = FindEmptySlot(id);
+			EnsureAccess(slot);
 
-			_entities[slot] = new EntityData(id, name);
+			_freeSlotHead = -_entities[slot];
+
+			_entities[slot] = id;
+			_names[slot] = name;
+
 			_entityCount++;
 
-			return new Entity(id, slot, _contextIdShift);
+			return new Entity(id, slot);
 		}
 
-		public bool Destroy(Entity e)
+		public void Destroy(Entity e)
 		{
 			if (!Contains(e))
-				return false;
+				return;
 
-			_entities[e.slot] = EntityData.Empty;
+			_entities[e.slot] = -_freeSlotHead;
+			_names[e.slot] = null;
+
+			_freeSlotHead = e.slot;
 			_entityCount--;
-
-			return true;
 		}
 
 		public void SetName(Entity e, string name)
@@ -68,47 +66,42 @@ namespace SlimECS
 			if (!Contains(e))
 				return;
 
-			_entities[e.slot].name = name;
+			_names[e.slot] = name;
 		}
 
 		public bool Contains(Entity e)
 		{
-			if (e.id <= 0 || e.location <= 0 || e.contextIdShift != _contextIdShift)
+			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
 				return false;
 
-			int slot = e.slot;
-			if (slot >= _entities.Length)
-				return false;
-
-			return _entities[slot].id == e.id;
+			return _entities[e.slot] == e.id;
 		}
 
-		private int FindEmptySlot(int id)
+		private void EnsureAccess(int index)
 		{
-			int capacity = _entities.Length;
+			int size = _entities.Length;
+			if (index < size)
+				return;
 
-			// enlarge container(2x) when it's almost full
-			if (_entityCount >= capacity * EnlargeThresold)
+			while (index >= size)
 			{
-				capacity *= 2;
-				Array.Resize(ref _entities, capacity);
-			}
+				if (size <= 0)
+					size = DefaultCapacity;
+				else
+					size *= 2;
 
-			int start = id % SlotModDenominator % capacity;
-			int slot = start;
-
-			// find empty slot, step by _findEmptySlotStep
-			for (;;)
-			{
-				if (_entities[slot].id == 0)
+				if ((uint)size > MaxCapacity)
+				{
+					size = MaxCapacity;
 					break;
-
-				slot = (slot + FindEmptySlotStep) % capacity;
-				if (slot == start)
-					throw new EntityContainerException();
+				}
 			}
 
-			return slot;
+			if (size > _entities.Length)
+			{
+				Array.Resize(ref _entities, size);
+				Array.Resize(ref _names, size);
+			}
 		}
 	}
 }

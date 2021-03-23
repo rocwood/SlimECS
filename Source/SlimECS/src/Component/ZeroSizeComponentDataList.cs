@@ -1,46 +1,52 @@
 namespace SlimECS
 {
-	public class ZeroSizeComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
+	internal class ZeroSizeComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
 	{
-		private StructArray<bool> _data;
+		private StructArray<int> _data;
 
 		public ZeroSizeComponentDataList()
 		{
-			_data = new StructArray<bool>(0);
+			_data = new StructArray<int>(0);
 		}
 
-		public bool Has(int index)
+		public bool Has(int entityId, int slot)
 		{
-			if (index < 0 || index >= _data.Length)
+			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
 				return false;
 
-			return _data[index];
+			return _data[slot] == entityId;
 		}
 
-		public bool Get(int index, out T value)
+		public bool Get(int entityId, int slot, out T value)
 		{
 			value = default;
 
-			return Has(index);
+			return Has(entityId, slot);
 		}
 
-		public void Set(int index, T value)
+		public T Get(int entityId, int slot)
 		{
-			if (index < 0)
+			return default;
+		}
+
+		public void Set(int entityId, int slot, T value)
+		{
+			if (entityId <= 0 || slot < 0)
 				return;
 
-			_data.EnsureAccess(index);
-			_data[index] = true;
+			_data.EnsureAccess(slot);
+
+			_data[slot] = entityId;
 		}
 
-		public bool Remove(int index)
+		public bool Remove(int entityId, int slot)
 		{
-			if (index < 0 || index >= _data.Length)
+			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
 				return false;
 
 			// TODO: onRemove
 
-			_data[index] = false;
+			_data[slot] = 0;
 			return true;
 		}
 	}

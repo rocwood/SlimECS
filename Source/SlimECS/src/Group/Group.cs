@@ -24,7 +24,7 @@ namespace SlimECS
 			if (entity == null)
 				return;
 
-			if (entity.isEnabled && _matcher.Matches(entity))
+			if (_context.IsMatch(entity, _matcher))
 				HandleAddEntity(entity);
 			else
 				HandleRemoveEntity(entity);

@@ -5,9 +5,9 @@ namespace SlimECS
 {
 	public class Matcher
 	{
-		private List<int> _all;
-		private List<int> _any;
-		private List<int> _none;
+		internal List<int> all;
+		internal List<int> any;
+		internal List<int> none;
 
 		internal bool isSealed { get; private set; }
 
@@ -23,12 +23,12 @@ namespace SlimECS
 
 		internal Matcher Clone()
 		{
-			return new Matcher(false, _all, _any, _none);
+			return new Matcher(false, all, any, none);
 		}
 
-		internal void WithAll(IReadOnlyList<int> indices) => Add(ref _all, indices);
-		internal void WithAny(IReadOnlyList<int> indices) => Add(ref _any, indices);
-		internal void WithNone(IReadOnlyList<int> indices) => Add(ref _none, indices);
+		internal void WithAll(IReadOnlyList<int> indices) => Add(ref all, indices);
+		internal void WithAny(IReadOnlyList<int> indices) => Add(ref any, indices);
+		internal void WithNone(IReadOnlyList<int> indices) => Add(ref none, indices);
 
 		internal Matcher MakeSealed()
 		{
@@ -55,12 +55,14 @@ namespace SlimECS
 			list.AddDistinctSorted(indices);
 		}
 
+		/*
 		public bool Matches(Context context, Entity entity)
 		{
-			return (_all == null || entity.HasAllComponents(_all))
-				&& (_any == null || entity.HasAnyComponent(_any))
-				&& (_none == null || !entity.HasAnyComponent(_none));
+			return (all == null || entity.HasAllComponents(all))
+				&& (any == null || entity.HasAnyComponent(any))
+				&& (none == null || !entity.HasAnyComponent(none));
 		}
+		*/
 
 		public override bool Equals(object obj)
 		{
@@ -75,9 +77,9 @@ namespace SlimECS
 			if (other == null || other.GetHashCode() != GetHashCode())
 				return false;
 
-			if (!_all.CheckEquals(other._all)) return false;
-			if (!_any.CheckEquals(other._any)) return false;
-			if (!_none.CheckEquals(other._none)) return false;
+			if (!all.CheckEquals(other.all)) return false;
+			if (!any.CheckEquals(other.any)) return false;
+			if (!none.CheckEquals(other.none)) return false;
 
 			return true;
 		}
@@ -86,9 +88,9 @@ namespace SlimECS
 		{
 			var hashCode = -80052522;
 
-			hashCode = _all.ComputeHashCode(hashCode, -1521134295);
-			hashCode = _any.ComputeHashCode(hashCode, -1521134295);
-			hashCode = _none.ComputeHashCode(hashCode, -1521134295);
+			hashCode = all.ComputeHashCode(hashCode, -1521134295);
+			hashCode = any.ComputeHashCode(hashCode, -1521134295);
+			hashCode = none.ComputeHashCode(hashCode, -1521134295);
 
 			_hash = hashCode;
 		}
