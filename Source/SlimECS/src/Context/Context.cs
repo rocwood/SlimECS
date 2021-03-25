@@ -36,7 +36,7 @@ namespace SlimECS
 
 		public void Poll()
 		{
-			// TODO
+			HandleGroupChanges();
 
 			_entities.CollectDestroyEntities();
 		}

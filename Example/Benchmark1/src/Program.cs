@@ -27,13 +27,12 @@ namespace SlimECS.Benchmark
 
 		public override void Execute()
 		{
-			//var entities = context.WithAll<Position, Velocity>().GetEntities();
-			IReadOnlyList<Entity> entities = null;
+			var entities = context.WithAll<Position, Velocity>().GetEntities();
 
 			foreach (var e in entities)
 			{
-				var v = context.GetComponent<Velocity>(e);
-				var pos = context.GetComponent<Position>(e);
+				var v = context.Get<Velocity>(e);
+				var pos = context.Get<Position>(e);
 
 				pos.x += v.x;
 				pos.y += v.y;
@@ -46,7 +45,7 @@ namespace SlimECS.Benchmark
 					(v.y > 0 && pos.y > axisBound))
 					v.y = -v.y;
 
-				context.SetComponent(e, pos);
+				context.Set(e, pos);
 			}
 		}
 	}
@@ -61,21 +60,19 @@ namespace SlimECS.Benchmark
 
 		public override void Execute()
 		{
-			//var entities = context.WithAll<Position, LifeTime>().GetEntities();
-
-			IReadOnlyList<Entity> entities = null;
+			var entities = context.WithAll<Position, LifeTime>().GetEntities();
 
 			foreach (var e in entities)
 			{
-				var lifeTime = context.GetComponent<LifeTime>(e);
+				var lifeTime = context.Get<LifeTime>(e);
 
 				if (lifeTime.ticks-- > 0)
 				{
-					context.SetComponent(e, lifeTime);
+					context.Set(e, lifeTime);
 					continue;
 				}
 
-				var pos = context.GetComponent<Position>(e);
+				var pos = context.Get<Position>(e);
 
 				var random = new Random(e.id);
 
@@ -94,12 +91,12 @@ namespace SlimECS.Benchmark
 		{
 			var child = context.Create();
 
-			context.SetComponent(child, new LifeTime { ticks = random.Next(1, maxChildLifeTime) });
-			context.SetComponent(child, new Position { x = x, y = y });
+			context.Set(child, new LifeTime { ticks = random.Next(1, maxChildLifeTime) });
+			context.Set(child, new Position { x = x, y = y });
 
 			float vx = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
 			float vy = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
-			context.SetComponent(child, new Velocity { x = vx, y = vy });
+			context.Set(child, new Velocity { x = vx, y = vy });
 		}
 	}
 
@@ -110,7 +107,7 @@ namespace SlimECS.Benchmark
 
 		public void Init()
 		{
-			context = new Context(0, "Default");
+			context = new Context("Default");
 
 			var e = context.Create();
 
@@ -126,8 +123,6 @@ namespace SlimECS.Benchmark
 		public void Execute()
 		{
 			frameId = 0;
-
-			return;
 
 			while (context.Count > 0)
 			{

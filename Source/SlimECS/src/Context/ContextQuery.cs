@@ -6,20 +6,13 @@ namespace SlimECS
 	{
 		private readonly Dictionary<Matcher, Group> _groups = new Dictionary<Matcher, Group>();
 
-		public Group GetGroup(Matcher matcher)
+		internal Group GetGroup(Matcher matcher)
 		{
 			if (!_groups.TryGetValue(matcher, out var group))
 			{
 				group = new Group(this, matcher);
 
-
-				for (int i = 0; i < _entities.Count; i++)
-				{
-					var entity = _entities[i];
-
-					if (entity.isEnabled)
-						group.HandleEntity(entity);
-				}
+				_entities.ForEachActive(e => group.HandleEntity(e));
 
 				_groups.Add(matcher, group);
 			}
@@ -27,22 +20,15 @@ namespace SlimECS
 			return group;
 		}
 
+
 		private void HandleGroupChanges()
 		{
-			int count = _entities.Count;
+			_entities.ForEachChanged(e => {
+				foreach (var kv in _groups)
+					kv.Value?.HandleEntity(e);
+			});
 
-			for (int i = 0; i < count; i++)
-			{
-				var entity = _entities[i];
-
-				if (!entity.isEnabled || entity.isModified)
-				{
-					foreach (var kv in _groups)
-						kv.Value?.HandleEntity(entity);
-
-					entity.ResetModified();
-				}
-			}
+			_entities.ResetChanged();
 		}
 
 		internal bool IsMatch(Entity e, Matcher matcher)

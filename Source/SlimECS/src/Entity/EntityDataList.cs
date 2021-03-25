@@ -28,18 +28,39 @@ namespace SlimECS
 			_flags = new byte[capacity];
 			_names = new string[capacity];
 
-			// init free-slot links
-			for (int i = 0; i < capacity; i++)
-				_entities[i] = -(i + 1);
-
 			_freeSlotHead = 0;
+
+			InitFreeSlotLinks(0, capacity);
+		}
+
+		private void InitFreeSlotLinks(int start, int end)
+		{
+			for (int i = start; i < end; i++)
+				_entities[i] = -(i + 1);
 		}
 
 		public int Count => _entityCount;
 
+		/*
+		internal int Capacity => _entities.Length;
+		internal Entity GetAt(int slot)
+		{
+			int id = _entities[slot];
+
+			return new Entity(id, slot);
+		}
+		internal Entity GetAt(int slot, out byte flags)
+		{
+			int id = _entities[slot];
+			flags = _flags[slot];
+
+			return new Entity(id, slot);
+		}
+		*/
+
 		public Entity Create(string name)
-		{	
-			var id = _lastId++;
+		{
+			var id = ++_lastId;
 			int slot = _freeSlotHead;
 
 			EnsureAccess(slot);
@@ -94,9 +115,13 @@ namespace SlimECS
 
 			if (size > _entities.Length)
 			{
+				int oldSize = _entities.Length;
+
 				Array.Resize(ref _entities, size);
 				Array.Resize(ref _flags, size);
 				Array.Resize(ref _names, size);
+
+				InitFreeSlotLinks(oldSize, size);
 			}
 		}
 
@@ -122,6 +147,37 @@ namespace SlimECS
 					_entityCount--;
 				}
 			}
+		}
+		internal void ForEach(Action<Entity, bool /*Active*/, bool/*Changed*/> process)
+		{
+			for (int slot = 0; slot < _entities.Length; slot++)
+			{
+				var e = new Entity(_entities[slot], slot);
+				var flags = _flags[slot];
+
+				process(e, (flags & FlagToDestroy) == 0, (flags & FlagChanged) != 0);
+			}
+		}
+		internal void ForEachActive(Action<Entity> process)
+		{
+			for (int slot = 0; slot < _entities.Length; slot++)
+			{
+				if (_entities[slot] > 0 && (_flags[slot] & FlagToDestroy) == 0)
+					process(new Entity(_entities[slot], slot));
+			}
+		}
+		internal void ForEachChanged(Action<Entity> process)
+		{
+			for (int slot = 0; slot < _entities.Length; slot++)
+			{
+				if (_entities[slot] > 0 && (_flags[slot] & FlagChanged) != 0)
+					process(new Entity(_entities[slot], slot));
+			}
+		}
+		internal void ResetChanged()
+		{
+			for (int slot = 0; slot < _entities.Length; slot++)
+				unchecked { _flags[slot] &= (byte)~FlagChanged; }
 		}
 	}
 }
