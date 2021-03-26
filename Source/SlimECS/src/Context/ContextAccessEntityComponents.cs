@@ -63,6 +63,18 @@ namespace SlimECS
 			return true;
 		}
 
+		public ref T Ref<T>(Entity e) where T : struct, IComponent
+		{
+			if (e.id <= 0)
+				return ref EmptyComponentRef<T>.value;
+
+			var c = GetComponentDataList<T>();
+			if (c == null)
+				return ref EmptyComponentRef<T>.value;
+
+			return ref c .Ref(e.id, e.slot);
+		}
+
 		public bool Remove<T>(Entity e) where T : struct, IComponent
 		{
 			if (e.id <= 0)

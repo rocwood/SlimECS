@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace SlimECS
@@ -14,6 +15,12 @@ namespace SlimECS
 		{
 			var group = builder.GetGroup();
 			group.GetEntities(output);
+		}
+
+		public static void ForEach(this GroupBuilder builder, Action<Entity> func)
+		{
+			var group = builder.GetGroup();
+			group.ForEach(func);
 		}
 
 		public static GroupBuilder WithAll<T1>(this GroupBuilder builder) where T1: struct, IComponent

@@ -137,7 +137,7 @@ namespace SlimECS
 		{
 			for (int slot = 0; slot < _entities.Length; slot++)
 			{
-				if (_entities[slot] > 0 && (_flags[slot] & FlagToDestroy) != 0)
+				if ((_flags[slot] & FlagToDestroy) != 0 && _entities[slot] > 0)
 				{
 					_entities[slot] = -_freeSlotHead;
 					_names[slot] = null;
@@ -170,7 +170,7 @@ namespace SlimECS
 		{
 			for (int slot = 0; slot < _entities.Length; slot++)
 			{
-				if (_entities[slot] > 0 && (_flags[slot] & FlagChanged) != 0)
+				if ((_flags[slot] & FlagChanged) != 0 && _entities[slot] > 0)
 					process(new Entity(_entities[slot], slot));
 			}
 		}

@@ -66,6 +66,18 @@ namespace SlimECS
 			d.entityId = entityId;
 		}
 
+		public ref T Ref(int entityId, int slot)
+		{
+			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
+				return ref EmptyComponentRef<T>.value;
+
+			ref var d = ref _data.Ref(slot);
+			if (d.entityId != entityId)
+				return ref EmptyComponentRef<T>.value;
+
+			return ref d.component;
+		}
+
 		public bool Remove(int entityId, int slot)
 		{
 			if (!Has(entityId, slot))

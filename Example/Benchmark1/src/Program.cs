@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace SlimECS.Benchmark
@@ -18,6 +17,7 @@ namespace SlimECS.Benchmark
 
 	public struct LifeTime : IComponent
 	{
+		public int id;
 		public int ticks;
 	}
 
@@ -27,26 +27,34 @@ namespace SlimECS.Benchmark
 
 		public override void Execute()
 		{
-			var entities = context.WithAll<Position, Velocity>().GetEntities();
+			var query = context.WithAll<Position, Velocity>();
+			query.ForEach(Process);
+		}
 
-			foreach (var e in entities)
-			{
-				var v = context.Get<Velocity>(e);
-				var pos = context.Get<Position>(e);
+		private Action<Entity> _process;
 
-				pos.x += v.x;
-				pos.y += v.y;
+		public MovementSystem()
+		{
+			_process = Process;
+		}
 
-				// check bound, and reflect velocity
-				if ((v.x < 0 && pos.x < -axisBound) ||
-					(v.x > 0 && pos.x > axisBound))
-					v.x = -v.x;
-				if ((v.y < 0 && pos.y < -axisBound) ||
-					(v.y > 0 && pos.y > axisBound))
-					v.y = -v.y;
+		private void Process(Entity e)
+		{
+			ref var v = ref context.Ref<Velocity>(e);
+			ref var pos = ref context.Ref<Position>(e);
 
-				context.Set(e, pos);
-			}
+			pos.x += v.x;
+			pos.y += v.y;
+
+			// check bound, and reflect velocity
+			if ((v.x < 0 && pos.x < -axisBound) ||
+				(v.x > 0 && pos.x > axisBound))
+				v.x = -v.x;
+			if ((v.y < 0 && pos.y < -axisBound) ||
+				(v.y > 0 && pos.y > axisBound))
+				v.y = -v.y;
+
+			//context.Set(e, pos);
 		}
 	}
 
@@ -57,47 +65,59 @@ namespace SlimECS.Benchmark
 		private const int maxChildCount = 4;
 		private const int maxChildLifeTime = 1000;
 		private const float maxAxisSpeed = 20;
-
+		
 		public override void Execute()
 		{
-			var entities = context.WithAll<Position, LifeTime>().GetEntities();
+			var query = context.WithAll<Position, LifeTime>();
+			query.ForEach(Process);
+		}
 
-			foreach (var e in entities)
+		private Action<Entity> _process;
+
+		public LifeTimeSystem()
+		{
+			_process = Process;
+		}
+
+		private void Process(Entity e)
+		{
+			ref var lifeTime = ref context.Ref<LifeTime>(e);
+
+			if (lifeTime.ticks-- > 0)
 			{
-				var lifeTime = context.Get<LifeTime>(e);
-
-				if (lifeTime.ticks-- > 0)
-				{
-					context.Set(e, lifeTime);
-					continue;
-				}
-
-				var pos = context.Get<Position>(e);
-
-				var random = new Random(e.id);
-
-				var childCount = (e.id == 1) 
-					? initChildCount 
-					: random.Next(minChildCount, maxChildCount);
-
-				for (int i = 0; i < childCount; i++)
-					Spawn(pos.x, pos.y, random);
-
-				context.Destroy(e);
+				//context.Set(e, lifeTime);
+				return;
 			}
+
+			ref var pos = ref context.Ref <Position>(e);
+
+			var random = new Random(lifeTime.id);
+
+			var childCount = (lifeTime.id == 1)
+				? initChildCount
+				: random.Next(minChildCount, maxChildCount);
+
+			for (int i = 0; i < childCount; i++)
+				Spawn(pos.x, pos.y, random);
+
+			context.Destroy(e);
 		}
 
 		private void Spawn(float x, float y, Random random)
 		{
+			_lastId++;
+
 			var child = context.Create();
 
-			context.Set(child, new LifeTime { ticks = random.Next(1, maxChildLifeTime) });
+			context.Set(child, new LifeTime { id = _lastId, ticks = random.Next(1, maxChildLifeTime) });
 			context.Set(child, new Position { x = x, y = y });
 
 			float vx = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
 			float vy = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
 			context.Set(child, new Velocity { x = vx, y = vy });
 		}
+
+		private int _lastId = 1;
 	}
 
 	public class BenchmarkCase
@@ -111,8 +131,8 @@ namespace SlimECS.Benchmark
 
 			var e = context.Create();
 
-			context.SetComponent(e, new Position()); // x = y = 0, without Velocity
-			context.SetComponent(e, new LifeTime()); // ticks = 0
+			context.Set(e, new Position());				// x = y = 0, without Velocity
+			context.Set(e, new LifeTime { id = 1 });	// ticks = 0
 
 			systems = new SystemManager(context);
 			systems.CollectAll();
@@ -126,10 +146,7 @@ namespace SlimECS.Benchmark
 
 			while (context.Count > 0)
 			{
-				//Dump();
-
 				systems.Execute();
-				//systems.Cleanup();
 
 				frameId++;
 			}
@@ -137,13 +154,8 @@ namespace SlimECS.Benchmark
 
 		public void Cleanup()
 		{
-			//systems.TearDown();
-			//context.Reset();
-
 			systems = null;
 			context = null;
-
-			//Contexts.DestroyInstance();
 		}
 	}
 
@@ -177,8 +189,6 @@ namespace SlimECS.Benchmark
 
 			Console.WriteLine($"Frame = {benchmark.frameId}\n");
 			Console.WriteLine($"Init = {initTime}ms, {(mem1 - mem0) / 1024}KB\nExec = {execTime}ms, {(mem2 - mem1) / 1024}KB\nClean = {cleanupTime}");
-
-			//File.WriteAllText("DumpResult.txt", benchmark.GetDumpResult());
 		}
 	}
 }

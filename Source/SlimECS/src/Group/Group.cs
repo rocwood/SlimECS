@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace SlimECS
@@ -86,6 +87,24 @@ namespace SlimECS
 
 			for (int i = 0; i < values.Count; i++)
 				output.Add(values[i]);
+		}
+
+		public void ForEach(Action<Entity> func)
+		{
+			if (func == null)
+				return;
+
+			foreach (var kv in _entities)
+			{
+				func(kv.Value);
+			}
+
+			/*
+			var values = _entities.Values;
+
+			for (int i = 0; i < values.Count; i++)
+				func(values[i]);
+			*/
 		}
 
 		public override string ToString()

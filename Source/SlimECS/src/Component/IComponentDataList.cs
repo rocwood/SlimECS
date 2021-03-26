@@ -12,5 +12,6 @@ namespace SlimECS
 
 		bool Get(int entityId, int slot, out T value);
 		T Get(int entityId, int slot);
+		ref T Ref(int entityId, int slot);
 	}
 }

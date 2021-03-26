@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SlimECS.Test", "Test\SlimEC
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark1", "Example\Benchmark1\Benchmark1.csproj", "{CB192DE0-52C9-4227-816D-61DB2DD2AC1C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temp1", "Example\Temp1\Temp1.csproj", "{EA1D1D35-C18B-4979-AD57-C3958FAAE5B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,10 @@ Global
 		{CB192DE0-52C9-4227-816D-61DB2DD2AC1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB192DE0-52C9-4227-816D-61DB2DD2AC1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB192DE0-52C9-4227-816D-61DB2DD2AC1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA1D1D35-C18B-4979-AD57-C3958FAAE5B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA1D1D35-C18B-4979-AD57-C3958FAAE5B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA1D1D35-C18B-4979-AD57-C3958FAAE5B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA1D1D35-C18B-4979-AD57-C3958FAAE5B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,6 +58,7 @@ Global
 		{8D0C6282-F17D-4AD3-86E3-B5936E4271D8} = {8B2D9E78-DEFA-4A7F-B284-F38C4CF2A30A}
 		{0784202E-DAD7-46E4-A15F-3E2279659F68} = {ACE966C6-8F81-4462-B035-3A8AF7604953}
 		{CB192DE0-52C9-4227-816D-61DB2DD2AC1C} = {8B2D9E78-DEFA-4A7F-B284-F38C4CF2A30A}
+		{EA1D1D35-C18B-4979-AD57-C3958FAAE5B0} = {8B2D9E78-DEFA-4A7F-B284-F38C4CF2A30A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CD18EB3B-7230-49B8-8B2A-7739BD108901}
