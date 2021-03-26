@@ -135,7 +135,8 @@ namespace SlimECS
 
 		internal void CollectDestroyEntities()
 		{
-			for (int slot = 0; slot < _entities.Length; slot++)
+			int length = _entities.Length;
+			for (int slot = 0; slot < length; slot++)
 			{
 				if ((_flags[slot] & FlagToDestroy) != 0 && _entities[slot] > 0)
 				{
@@ -150,7 +151,8 @@ namespace SlimECS
 		}
 		internal void ForEach(Action<Entity, bool /*Active*/, bool/*Changed*/> process)
 		{
-			for (int slot = 0; slot < _entities.Length; slot++)
+			int length = _entities.Length;
+			for (int slot = 0; slot < length; slot++)
 			{
 				var e = new Entity(_entities[slot], slot);
 				var flags = _flags[slot];
@@ -160,7 +162,8 @@ namespace SlimECS
 		}
 		internal void ForEachActive(Action<Entity> process)
 		{
-			for (int slot = 0; slot < _entities.Length; slot++)
+			int length = _entities.Length;
+			for (int slot = 0; slot < length; slot++)
 			{
 				if (_entities[slot] > 0 && (_flags[slot] & FlagToDestroy) == 0)
 					process(new Entity(_entities[slot], slot));
@@ -168,7 +171,8 @@ namespace SlimECS
 		}
 		internal void ForEachChanged(Action<Entity> process)
 		{
-			for (int slot = 0; slot < _entities.Length; slot++)
+			int length = _entities.Length;
+			for (int slot = 0; slot < length; slot++)
 			{
 				if ((_flags[slot] & FlagChanged) != 0 && _entities[slot] > 0)
 					process(new Entity(_entities[slot], slot));
@@ -176,7 +180,8 @@ namespace SlimECS
 		}
 		internal void ResetChanged()
 		{
-			for (int slot = 0; slot < _entities.Length; slot++)
+			int length = _entities.Length;
+			for (int slot = 0; slot < length; slot++)
 				unchecked { _flags[slot] &= (byte)~FlagChanged; }
 		}
 	}

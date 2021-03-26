@@ -27,34 +27,23 @@ namespace SlimECS.Benchmark
 
 		public override void Execute()
 		{
-			var query = context.WithAll<Position, Velocity>();
-			query.ForEach(Process);
-		}
+			var query = context.WithAll<Position, Velocity>().GetGroup();
+			foreach (var e in query)
+			{
+				ref var v = ref context.Ref<Velocity>(e);
+				ref var pos = ref context.Ref<Position>(e);
 
-		private Action<Entity> _process;
+				pos.x += v.x;
+				pos.y += v.y;
 
-		public MovementSystem()
-		{
-			_process = Process;
-		}
-
-		private void Process(Entity e)
-		{
-			ref var v = ref context.Ref<Velocity>(e);
-			ref var pos = ref context.Ref<Position>(e);
-
-			pos.x += v.x;
-			pos.y += v.y;
-
-			// check bound, and reflect velocity
-			if ((v.x < 0 && pos.x < -axisBound) ||
-				(v.x > 0 && pos.x > axisBound))
-				v.x = -v.x;
-			if ((v.y < 0 && pos.y < -axisBound) ||
-				(v.y > 0 && pos.y > axisBound))
-				v.y = -v.y;
-
-			//context.Set(e, pos);
+				// check bound, and reflect velocity
+				if ((v.x < 0 && pos.x < -axisBound) ||
+					(v.x > 0 && pos.x > axisBound))
+					v.x = -v.x;
+				if ((v.y < 0 && pos.y < -axisBound) ||
+					(v.y > 0 && pos.y > axisBound))
+					v.y = -v.y;
+			}
 		}
 	}
 
@@ -68,39 +57,30 @@ namespace SlimECS.Benchmark
 		
 		public override void Execute()
 		{
-			var query = context.WithAll<Position, LifeTime>();
-			query.ForEach(Process);
-		}
-
-		private Action<Entity> _process;
-
-		public LifeTimeSystem()
-		{
-			_process = Process;
-		}
-
-		private void Process(Entity e)
-		{
-			ref var lifeTime = ref context.Ref<LifeTime>(e);
-
-			if (lifeTime.ticks-- > 0)
+			var query = context.WithAll<Position, LifeTime>().GetGroup();
+			foreach (var e in query)
 			{
-				//context.Set(e, lifeTime);
-				return;
+				ref var lifeTime = ref context.Ref<LifeTime>(e);
+
+				if (lifeTime.ticks-- > 0)
+				{
+					//context.Set(e, lifeTime);
+					continue;
+				}
+
+				ref var pos = ref context.Ref<Position>(e);
+
+				var random = new Random(lifeTime.id);
+
+				var childCount = (lifeTime.id == 1)
+					? initChildCount
+					: random.Next(minChildCount, maxChildCount);
+
+				for (int i = 0; i < childCount; i++)
+					Spawn(pos.x, pos.y, random);
+
+				context.Destroy(e);
 			}
-
-			ref var pos = ref context.Ref <Position>(e);
-
-			var random = new Random(lifeTime.id);
-
-			var childCount = (lifeTime.id == 1)
-				? initChildCount
-				: random.Next(minChildCount, maxChildCount);
-
-			for (int i = 0; i < childCount; i++)
-				Spawn(pos.x, pos.y, random);
-
-			context.Destroy(e);
 		}
 
 		private void Spawn(float x, float y, Random random)

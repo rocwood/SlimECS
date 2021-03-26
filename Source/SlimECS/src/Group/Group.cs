@@ -7,10 +7,14 @@ namespace SlimECS
 	{
 		private readonly Context _context;
 		private readonly Matcher _matcher;
+		
 		private readonly SortedList<int, Entity> _entities = new SortedList<int, Entity>();
 
-		private readonly List<Entity> _entitiesCache = new List<Entity>();
+		//private readonly List<Entity> _entitiesCache = new List<Entity>();
 		private bool _hasCached = false;
+
+		//private readonly StructArray<Entity> _entitiesList = new StructArray<Entity>();
+		//private readonly SortedDictionary<int, int> _entitiesMap = new SortedDictionary<int, int>();
 
 		public int Count => _entities.Count;
 
@@ -61,6 +65,32 @@ namespace SlimECS
 			return e == item;
 		}
 
+		public Enumerator GetEnumerator()
+		{
+			return new Enumerator(_entities);
+		}
+
+		public struct Enumerator
+		{
+			readonly IEnumerator<KeyValuePair<int, Entity>> _enumerator;
+
+			internal Enumerator(SortedList<int, Entity> list)
+			{
+				_enumerator = list.GetEnumerator();
+			}
+
+			public Entity Current
+			{
+				get => _enumerator.Current.Value;
+			}
+
+			public bool MoveNext()
+			{
+				return _enumerator.MoveNext();
+			}
+		}
+
+		/*
 		public IReadOnlyList<Entity> GetEntities()
 		{
 			if (!_hasCached)
@@ -99,13 +129,12 @@ namespace SlimECS
 				func(kv.Value);
 			}
 
-			/*
-			var values = _entities.Values;
+			//var values = _entities.Values;
 
-			for (int i = 0; i < values.Count; i++)
-				func(values[i]);
-			*/
+			//for (int i = 0; i < values.Count; i++)
+			//	func(values[i]);
 		}
+		*/
 
 		public override string ToString()
 		{

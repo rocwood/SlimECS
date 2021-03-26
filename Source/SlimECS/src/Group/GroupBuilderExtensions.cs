@@ -5,6 +5,7 @@ namespace SlimECS
 {
 	public static class GroupBuilderExtensions
 	{
+		/*
 		public static IReadOnlyList<Entity> GetEntities(this GroupBuilder builder)
 		{
 			var group = builder.GetGroup();
@@ -22,6 +23,7 @@ namespace SlimECS
 			var group = builder.GetGroup();
 			group.ForEach(func);
 		}
+		*/
 
 		public static GroupBuilder WithAll<T1>(this GroupBuilder builder) where T1: struct, IComponent
 			=> builder.WithAll(ComponentIndexList<T1>.Get());
