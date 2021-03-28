@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using SlimECS.Utils;
+//using SlimECS.Utils;
 
 namespace SlimECS
 {

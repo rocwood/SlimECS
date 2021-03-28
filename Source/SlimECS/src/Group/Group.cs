@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+//using System.Collections.Generic;
 
 namespace SlimECS
 {
@@ -65,11 +66,13 @@ namespace SlimECS
 			return e == item;
 		}
 
-		public Enumerator GetEnumerator()
+		public IEnumerator<Entity> GetEnumerator()
 		{
-			return new Enumerator(_entities);
+			return _entities.Values.GetEnumerator();
+			//return new Enumerator(_entities);
 		}
 
+		/*
 		public struct Enumerator
 		{
 			readonly IEnumerator<KeyValuePair<int, Entity>> _enumerator;
@@ -89,6 +92,7 @@ namespace SlimECS
 				return _enumerator.MoveNext();
 			}
 		}
+		*/
 
 		/*
 		public IReadOnlyList<Entity> GetEntities()

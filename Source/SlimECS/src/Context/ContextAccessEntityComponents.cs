@@ -1,13 +1,25 @@
+using System.Runtime.CompilerServices;
+
 namespace SlimECS
 {
 	public partial class Context
 	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasComponent<T>(Entity e) where T : struct, IComponent => Has<T>(e);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool GetComponent<T>(Entity e, out T value) where T : struct, IComponent => Get(e, out value);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T GetComponent<T>(Entity e) where T : struct, IComponent => Get<T>(e);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool SetComponent<T>(Entity e, T value) where T : struct, IComponent => Set(e, value);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool RemoveComponent<T>(Entity e) where T : struct, IComponent => Remove<T>(e);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has<T>(Entity e) where T : struct, IComponent
 		{
 			if (e.id <= 0)
@@ -20,6 +32,7 @@ namespace SlimECS
 			return c.Has(e.id, e.slot);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Get<T>(Entity e, out T value) where T : struct, IComponent
 		{
 			if (e.id <= 0)
@@ -38,6 +51,7 @@ namespace SlimECS
 			return c.Get(e.id, e.slot, out value);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Get<T>(Entity e) where T : struct, IComponent
 		{
 			if (e.id <= 0)
@@ -50,6 +64,7 @@ namespace SlimECS
 			return c.Get(e.id, e.slot);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Set<T>(Entity e, T value) where T : struct, IComponent
 		{
 			if (e.id <= 0)
@@ -63,6 +78,7 @@ namespace SlimECS
 			return true;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Ref<T>(Entity e) where T : struct, IComponent
 		{
 			if (e.id <= 0)
@@ -75,6 +91,7 @@ namespace SlimECS
 			return ref c .Ref(e.id, e.slot);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Remove<T>(Entity e) where T : struct, IComponent
 		{
 			if (e.id <= 0)

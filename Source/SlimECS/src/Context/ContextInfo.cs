@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace SlimECS
 {
@@ -22,6 +23,7 @@ namespace SlimECS
 	{
 		private static ComponentTypeInfo[] _componentInfoList;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ComponentTypeInfo[] GetComponentInfoList()
 		{
 			if (_componentInfoList == null)
@@ -30,6 +32,7 @@ namespace SlimECS
 			return _componentInfoList;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int GetIndexOf<T>() where T : struct, IComponent
 		{
 			var info = GetComponentInfo<T>();
@@ -39,6 +42,7 @@ namespace SlimECS
 			return -1;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ComponentTypeInfo GetComponentInfo<T>() where T : struct, IComponent
 		{
 			ref var info = ref ComponentTypeInfo<T>.info;
@@ -53,6 +57,7 @@ namespace SlimECS
 			return info;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComponentTypeInfo[] CollectComponents()
 		{
 			var baseType = typeof(IComponent);
@@ -76,6 +81,7 @@ namespace SlimECS
 			return list;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		// https://stackoverflow.com/a/27851610
 		private static bool IsZeroSizeStruct(Type t)
 		{

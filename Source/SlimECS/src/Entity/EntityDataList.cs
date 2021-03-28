@@ -7,12 +7,15 @@ namespace SlimECS
 		private const int DefaultCapacity = 256;
 		private const int MaxCapacity = 0x7FEFFFFF;
 
-		private const byte FlagToDestroy = 1;
-		private const byte FlagChanged = 2;
+		struct EntityData
+		{
+			public int id;
+			public bool toDestroy;
+			public bool changed;
+			public string name;
+		}
 
-		private int[] _entities;
-		private byte[] _flags;
-		private string[] _names;
+		private EntityData[] _entities;
 
 		private int _lastId = 0;
 		private int _entityCount = 0;
@@ -24,9 +27,7 @@ namespace SlimECS
 			if (capacity <= 0)
 				capacity = DefaultCapacity;
 
-			_entities = new int[capacity];
-			_flags = new byte[capacity];
-			_names = new string[capacity];
+			_entities = new EntityData[capacity];
 
 			_freeSlotHead = 0;
 
@@ -36,7 +37,7 @@ namespace SlimECS
 		private void InitFreeSlotLinks(int start, int end)
 		{
 			for (int i = start; i < end; i++)
-				_entities[i] = -(i + 1);
+				_entities[i].id = -(i + 1);
 		}
 
 		public int Count => _entityCount;
@@ -65,11 +66,14 @@ namespace SlimECS
 
 			EnsureAccess(slot);
 
-			_freeSlotHead = -_entities[slot];
+			ref var d = ref _entities[slot];
 
-			_entities[slot] = id;
-			_names[slot] = name;
-			_flags[slot] = FlagChanged;
+			_freeSlotHead = -d.id;
+
+			d.id = id;
+			d.name = name;
+			d.changed = true;
+			d.toDestroy = false;
 
 			_entityCount++;
 
@@ -81,7 +85,7 @@ namespace SlimECS
 			if (!IsActive(e))
 				return;
 
-			_names[e.slot] = name;
+			_entities[e.slot].name = name;
 		}
 
 		public bool IsActive(Entity e)
@@ -89,8 +93,8 @@ namespace SlimECS
 			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
 				return false;
 
-			return _entities[e.slot] == e.id 
-				&& (_flags[e.slot]&FlagToDestroy) == 0;
+			ref var d = ref _entities[e.slot];
+			return d.id == e.id && !d.toDestroy;
 		}
 
 		private void EnsureAccess(int index)
@@ -116,10 +120,7 @@ namespace SlimECS
 			if (size > _entities.Length)
 			{
 				int oldSize = _entities.Length;
-
 				Array.Resize(ref _entities, size);
-				Array.Resize(ref _flags, size);
-				Array.Resize(ref _names, size);
 
 				InitFreeSlotLinks(oldSize, size);
 			}
@@ -130,7 +131,9 @@ namespace SlimECS
 			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
 				return;
 
-			_flags[e.slot] = FlagChanged | FlagToDestroy;
+			ref var d = ref _entities[e.slot];
+			d.toDestroy = true;
+			d.changed = true;
 		}
 
 		internal void CollectDestroyEntities()
@@ -138,51 +141,61 @@ namespace SlimECS
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
-				if ((_flags[slot] & FlagToDestroy) != 0 && _entities[slot] > 0)
+				ref var e = ref _entities[slot];
+				if (e.toDestroy && e.id > 0)
 				{
-					_entities[slot] = -_freeSlotHead;
-					_names[slot] = null;
-					_flags[slot] = 0;
+					e.id = -_freeSlotHead;
+					e.toDestroy = false;
+					e.changed = false;
+					e.name = null;
 
 					_freeSlotHead = slot;
 					_entityCount--;
 				}
 			}
 		}
+
 		internal void ForEach(Action<Entity, bool /*Active*/, bool/*Changed*/> process)
 		{
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
-				var e = new Entity(_entities[slot], slot);
-				var flags = _flags[slot];
-
-				process(e, (flags & FlagToDestroy) == 0, (flags & FlagChanged) != 0);
+				ref var e = ref _entities[slot];
+				if (e.id > 0)
+					process(new Entity(e.id, slot), !e.toDestroy, e.changed);
 			}
 		}
+
 		internal void ForEachActive(Action<Entity> process)
 		{
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
-				if (_entities[slot] > 0 && (_flags[slot] & FlagToDestroy) == 0)
-					process(new Entity(_entities[slot], slot));
+				ref var e = ref _entities[slot];
+				if (e.id > 0 && !e.toDestroy)
+					process(new Entity(e.id, slot));
 			}
 		}
+
 		internal void ForEachChanged(Action<Entity> process)
 		{
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
-				if ((_flags[slot] & FlagChanged) != 0 && _entities[slot] > 0)
-					process(new Entity(_entities[slot], slot));
+				ref var e = ref _entities[slot];
+				if (e.id > 0 && e.changed)
+					process(new Entity(e.id, slot));
 			}
 		}
+
 		internal void ResetChanged()
 		{
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
-				unchecked { _flags[slot] &= (byte)~FlagChanged; }
+			{
+				ref var e = ref _entities[slot];
+				e.changed = false;
+			}
 		}
 	}
 }

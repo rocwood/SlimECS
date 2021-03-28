@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SlimECS.Utils
+namespace SlimECS
 {
 	static class IndicesUtils
 	{

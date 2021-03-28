@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace SlimECS
 {
@@ -41,6 +42,7 @@ namespace SlimECS
 			_entities.CollectDestroyEntities();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private IComponentDataList<T> GetComponentDataList<T>() where T : struct, IComponent
 		{
 			int componentIndex = ContextInfo.GetIndexOf<T>();
