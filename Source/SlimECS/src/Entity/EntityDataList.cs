@@ -22,6 +22,9 @@ namespace SlimECS
 
 		private int _freeSlotHead = 0;
 
+		private bool _hasToDestroy = false;
+		private bool _hasChanged = false;
+
 		public EntityDataList(int capacity)
 		{
 			if (capacity <= 0)
@@ -77,6 +80,8 @@ namespace SlimECS
 
 			_entityCount++;
 
+			_hasChanged = true;
+
 			return new Entity(id, slot);
 		}
 
@@ -95,6 +100,18 @@ namespace SlimECS
 
 			ref var d = ref _entities[e.slot];
 			return d.id == e.id && !d.toDestroy;
+		}
+
+		internal void SetChanged(Entity e)
+		{
+			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
+				return;
+
+			ref var d = ref _entities[e.slot];
+			if (d.id == e.id)
+				d.changed = true;
+
+			_hasChanged = true;
 		}
 
 		private void EnsureAccess(int index)
@@ -134,10 +151,16 @@ namespace SlimECS
 			ref var d = ref _entities[e.slot];
 			d.toDestroy = true;
 			d.changed = true;
+
+			_hasToDestroy = true;
+			_hasChanged = true;
 		}
 
 		internal void CollectDestroyEntities()
 		{
+			if (!_hasToDestroy)
+				return;
+
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
@@ -153,6 +176,8 @@ namespace SlimECS
 					_entityCount--;
 				}
 			}
+
+			_hasToDestroy = false;
 		}
 
 		internal void ForEach(Action<Entity, bool /*Active*/, bool/*Changed*/> process)
@@ -179,11 +204,14 @@ namespace SlimECS
 
 		internal void ForEachChanged(Action<Entity> process)
 		{
+			if (!_hasChanged)
+				return;
+
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
 				ref var e = ref _entities[slot];
-				if (e.id > 0 && e.changed)
+				if (e.changed && e.id > 0)
 					process(new Entity(e.id, slot));
 			}
 		}
@@ -193,9 +221,10 @@ namespace SlimECS
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
-				ref var e = ref _entities[slot];
-				e.changed = false;
+				_entities[slot].changed = false;
 			}
+
+			_hasChanged = false;
 		}
 	}
 }

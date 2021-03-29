@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace SlimECS
@@ -23,12 +24,19 @@ namespace SlimECS
 
 		private void HandleGroupChanges()
 		{
-			_entities.ForEachChanged(e => {
-				foreach (var kv in _groups)
-					kv.Value?.HandleEntity(e);
-			});
+			if (_handleGroupChangedFunc == null)
+				_handleGroupChangedFunc = HandleGroupChangesImpl;
 
+			_entities.ForEachChanged(_handleGroupChangedFunc);
 			_entities.ResetChanged();
+		}
+
+		private Action<Entity> _handleGroupChangedFunc;
+
+		private void HandleGroupChangesImpl(Entity e)
+		{
+			foreach (var kv in _groups)
+				kv.Value?.HandleEntity(e);
 		}
 
 		internal bool IsMatch(Entity e, Matcher matcher)

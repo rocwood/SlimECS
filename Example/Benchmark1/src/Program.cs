@@ -25,9 +25,13 @@ namespace SlimECS.Benchmark
 	{
 		private float axisBound = 100;
 
+		private Group query;
+
 		public override void Execute()
 		{
-			var query = context.WithAll<Position, Velocity>().GetGroup();
+			if (query == null)
+				query = context.WithAll<Position, Velocity>().GetGroup();
+
 			foreach (var e in query)
 			{
 				ref var v = ref context.Ref<Velocity>(e);
@@ -54,10 +58,14 @@ namespace SlimECS.Benchmark
 		private const int maxChildCount = 4;
 		private const int maxChildLifeTime = 1000;
 		private const float maxAxisSpeed = 20;
-		
+
+		private Group query;
+
 		public override void Execute()
 		{
-			var query = context.WithAll<Position, LifeTime>().GetGroup();
+			if (query == null) 
+				query = context.WithAll<Position, LifeTime>().GetGroup();
+
 			foreach (var e in query)
 			{
 				ref var lifeTime = ref context.Ref<LifeTime>(e);
@@ -85,19 +93,15 @@ namespace SlimECS.Benchmark
 
 		private void Spawn(float x, float y, Random random)
 		{
-			_lastId++;
-
 			var child = context.Create();
 
-			context.Set(child, new LifeTime { id = _lastId, ticks = random.Next(1, maxChildLifeTime) });
+			context.Set(child, new LifeTime { id = random.Next(1000, int.MaxValue), ticks = random.Next(1, maxChildLifeTime) });
 			context.Set(child, new Position { x = x, y = y });
 
 			float vx = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
 			float vy = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
 			context.Set(child, new Velocity { x = vx, y = vy });
 		}
-
-		private int _lastId = 1;
 	}
 
 	public class BenchmarkCase

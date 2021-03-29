@@ -75,6 +75,8 @@ namespace SlimECS
 				return false;
 
 			c.Set(e.id, e.slot, value);
+
+			_entities.SetChanged(e);
 			return true;
 		}
 
@@ -101,7 +103,11 @@ namespace SlimECS
 			if (c == null)
 				return false;
 
-			return c.Remove(e.id, e.slot);
+			if (!c.Remove(e.id, e.slot))
+				return false;
+
+			_entities.SetChanged(e);
+			return true;
 		}
 	}
 }
