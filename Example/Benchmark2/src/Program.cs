@@ -15,21 +15,26 @@ namespace ECS.Benchmark
 		public float x;
 		public float y;
 	}
-
+	
 	public class MovementSystem : SystemBase
 	{
 		private const float axisBound = 100;
 
-		private Group query;
+		public static Group query;
 
 		public override void Execute()
 		{
 			//var query = context.WithAll<Position, Velocity>().GetGroup();
-			if (query == null)
-				query = context.WithAll<Position, Velocity>().GetGroup();
+			//if (query == null)
+			//	query = context.WithAll<Position, Velocity>().GetGroup();
 
-			foreach (var e in query)
+			//foreach (var e in query)
+
+			int count = query.Count;
+			for (int i = 0; i < count; i++)
 			{
+				var e = query.GetAt(i);
+
 				ref var v = ref context.Ref<Velocity>(e);
 				ref var pos = ref context.Ref<Position>(e);
 
@@ -53,7 +58,7 @@ namespace ECS.Benchmark
 		private const float maxAxisSpeed = 20;
 
 		private const int initialEntityCount = 1000;
-		private const int iterateCount = 100000;
+		private const int iterateCount = 10000;
 
 		private Context context;
 		private SystemManager systems;
@@ -82,6 +87,10 @@ namespace ECS.Benchmark
 				if (i == 0)
 					e0 = child;
 			}
+
+			MovementSystem.query = 
+			context.WithAll<Position, Velocity>().GetGroup();
+			context.Poll();
 		}
 
 		public void Execute()

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 //using System.Collections.Generic;
 
 namespace SlimECS
@@ -17,7 +18,11 @@ namespace SlimECS
 		//private readonly StructArray<Entity> _entitiesList = new StructArray<Entity>();
 		//private readonly SortedDictionary<int, int> _entitiesMap = new SortedDictionary<int, int>();
 
-		public int Count => _entities.Count;
+		public int Count
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _entities.Count;
+		}
 
 		internal Group(Context context, Matcher matcher)
 		{
@@ -65,6 +70,10 @@ namespace SlimECS
 
 			return e == item;
 		}
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Entity GetAt(int index) => _entities.GetAt(index);
 
 		public IEnumerator<Entity> GetEnumerator()
 		{

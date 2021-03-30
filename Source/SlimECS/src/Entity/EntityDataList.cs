@@ -218,6 +218,9 @@ namespace SlimECS
 
 		internal void ResetChanged()
 		{
+			if (!_hasChanged)
+				return;
+
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{

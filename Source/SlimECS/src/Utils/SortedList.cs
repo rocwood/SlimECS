@@ -106,6 +106,12 @@ namespace SlimECS
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TValue GetAt(int index)
+		{
+			return values[index];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ValueList GetValueListHelper()
 		{
 			if (valueList == null)
