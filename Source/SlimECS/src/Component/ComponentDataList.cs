@@ -17,7 +17,7 @@ namespace SlimECS
 
 		public bool Has(int entityId, int slot)
 		{
-			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
+			if (entityId <= 0 || slot < 0)
 				return false;
 
 			return _data.Ref(slot).entityId == entityId;
@@ -25,7 +25,7 @@ namespace SlimECS
 
 		public bool Get(int entityId, int slot, out T value)
 		{
-			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
+			if (entityId <= 0 || slot < 0)
 			{
 				value = default;
 				return false;
@@ -44,7 +44,7 @@ namespace SlimECS
 
 		public T Get(int entityId, int slot)
 		{
-			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
+			if (entityId <= 0 || slot < 0)
 				return default;
 
 			ref var d = ref _data.Ref(slot);
@@ -68,7 +68,7 @@ namespace SlimECS
 
 		public ref T Ref(int entityId, int slot)
 		{
-			if (entityId <= 0 || slot < 0 || slot >= _data.Length)
+			if (entityId <= 0 || slot < 0)
 				return ref EmptyComponentRef<T>.value;
 
 			ref var d = ref _data.Ref(slot);

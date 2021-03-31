@@ -46,11 +46,10 @@ namespace SlimECS
 		private IComponentDataList<T> GetComponentDataList<T>() where T : struct, IComponent
 		{
 			int componentIndex = ContextInfo.GetIndexOf<T>();
-			if (componentIndex < 0 || componentIndex >= _components.Length)
+			if (componentIndex < 0)
 				return null;
 
-			var c = _components[componentIndex];
-			return c as IComponentDataList<T>;
+			return (IComponentDataList<T>)_components[componentIndex];
 		}
 
 		private IComponentDataList CreateComponentDataList(ComponentTypeInfo info)

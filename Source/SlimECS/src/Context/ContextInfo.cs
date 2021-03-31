@@ -35,26 +35,20 @@ namespace SlimECS
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int GetIndexOf<T>() where T : struct, IComponent
 		{
-			var info = GetComponentInfo<T>();
-			if (info != null)
-				return info.index;
-
-			return -1;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ComponentTypeInfo GetComponentInfo<T>() where T : struct, IComponent
-		{
-			ref var info = ref ComponentTypeInfo<T>.info;
+			var info = ComponentTypeInfo<T>.info;
 			if (info == null)
 			{
 				if (_componentInfoList == null)
 					_componentInfoList = CollectComponents();
 
 				info = Array.Find(_componentInfoList, x => x.type == typeof(T));
+				if (info == null)
+					return -1;
+
+				ComponentTypeInfo<T>.info = info;
 			}
 
-			return info;
+			return info.index;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -92,7 +86,7 @@ namespace SlimECS
 
 		class ComponentTypeInfo<T> where T : struct, IComponent
 		{
-			public static ComponentTypeInfo info;
+			internal static ComponentTypeInfo info;
 		}
 	}
 }
