@@ -29,9 +29,7 @@ namespace ECS.Benchmark
 				query = context.WithAll<Position, Velocity>().GetGroup();
 
 			//foreach (var e in query)
-
-			int count = query.Count;
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i < query.Count; i++)
 			{
 				var e = query.GetAt(i);
 

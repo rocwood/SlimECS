@@ -32,8 +32,10 @@ namespace SlimECS.Benchmark
 			if (query == null)
 				query = context.WithAll<Position, Velocity>().GetGroup();
 
-			foreach (var e in query)
+			for (int i = 0; i < query.Count; i++)
 			{
+				var e = query.GetAt(i);
+				
 				ref var v = ref context.Ref<Velocity>(e);
 				ref var pos = ref context.Ref<Position>(e);
 
@@ -66,8 +68,10 @@ namespace SlimECS.Benchmark
 			if (query == null) 
 				query = context.WithAll<Position, LifeTime>().GetGroup();
 
-			foreach (var e in query)
+			for (int i = 0; i < query.Count; i++)
 			{
+				var e = query.GetAt(i);
+				
 				ref var lifeTime = ref context.Ref<LifeTime>(e);
 
 				if (lifeTime.ticks-- > 0)
@@ -84,7 +88,7 @@ namespace SlimECS.Benchmark
 					? initChildCount
 					: random.Next(minChildCount, maxChildCount);
 
-				for (int i = 0; i < childCount; i++)
+				for (int j = 0; j < childCount; j++)
 					Spawn(pos.x, pos.y, random);
 
 				context.Destroy(e);

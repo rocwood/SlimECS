@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace SlimECS
 {
@@ -21,11 +22,15 @@ namespace SlimECS
 
 		public int Length => _items.Length;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Ref(int index) => ref _items[index];
 
 		public T this[int index]
 		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _items[index];
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set => _items[index] = value;
 		}
 
