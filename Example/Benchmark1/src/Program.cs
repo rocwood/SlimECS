@@ -113,13 +113,13 @@ namespace SlimECS.Benchmark
 		{
 			context = new Context("Default");
 
+			systems = new SystemManager(context);
+			systems.CollectAll();
+
 			var e = context.Create();
 
 			context.Set(e, new Position());				// x = y = 0, without Velocity
-			context.Set(e, new LifeTime { id = 1 });	// ticks = 0
-
-			systems = new SystemManager(context);
-			systems.CollectAll();
+			context.Set(e, new LifeTime { id = 1 });    // ticks = 0
 		}
 
 		public int frameId { get; private set; }

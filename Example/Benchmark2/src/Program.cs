@@ -20,13 +20,13 @@ namespace ECS.Benchmark
 	{
 		private const float axisBound = 100;
 
-		public static Group query;
+		private Group query;
 
 		public override void Execute()
 		{
 			//var query = context.WithAll<Position, Velocity>().GetGroup();
-			//if (query == null)
-			//	query = context.WithAll<Position, Velocity>().GetGroup();
+			if (query == null)
+				query = context.WithAll<Position, Velocity>().GetGroup();
 
 			//foreach (var e in query)
 
@@ -88,7 +88,6 @@ namespace ECS.Benchmark
 					e0 = child;
 			}
 
-			MovementSystem.query = 
 			context.WithAll<Position, Velocity>().GetGroup();
 			context.Poll();
 		}
