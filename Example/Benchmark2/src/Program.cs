@@ -20,13 +20,12 @@ namespace ECS.Benchmark
 	{
 		private const float axisBound = 100;
 
-		private Group query;
+		private EntityQueryAll<Position, Velocity> query;
 
 		public override void Execute()
 		{
-			//var query = context.WithAll<Position, Velocity>().GetGroup();
 			if (query == null)
-				query = context.WithAll<Position, Velocity>().GetGroup();
+				context.GetQuery(out query);
 
 			//foreach (var e in query)
 			for (int i = 0; i < query.Count; i++)
@@ -86,7 +85,7 @@ namespace ECS.Benchmark
 					e0 = child;
 			}
 
-			context.WithAll<Position, Velocity>().GetGroup();
+			context.WithAll<Position, Velocity>().Get();
 			context.Poll();
 		}
 

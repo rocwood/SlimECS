@@ -24,6 +24,8 @@ namespace SlimECS
 			_components = new IComponentDataList[count];
 			for (int i = 0; i < count; i++)
 				_components[i] = CreateComponentDataList(componentInfoList[i]);
+
+			_queryParams = new object[] { this };
 		}
 
 		public int Count => _entities.Count;

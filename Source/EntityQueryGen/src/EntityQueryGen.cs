@@ -42,7 +42,8 @@ namespace SlimECS
 		static void Main(string[] args)
 		{
 			WriteQueryFile();
-			WriteQueryBuilderFile();
+			WriteBuilderFile();
+			WriteFactoryFile();
 		}
 
 		private static void WriteQueryFile()
@@ -56,6 +57,38 @@ namespace SlimECS
 			o.WriteQueryTemplates("Any", "true");
 
 			o.WriteLine("}");
+			o.Close();
+		}
+
+		private static void WriteBuilderFile()
+		{
+			var o = new StreamWriter($"{OutPath}EntityQueryBuilder.cs", false, Encoding.UTF8);
+			o.NewLine = "\n";
+
+			o.WriteLine("using System.Runtime.CompilerServices;\n");
+			o.WriteLine("namespace SlimECS\n{");
+			o.WriteBuilderTemplates("All");
+			o.WriteBuilderTemplates("Any");
+
+			o.WriteLine("}");
+			o.Close();
+		}
+
+		private static void WriteFactoryFile()
+		{
+			var o = new StreamWriter($"{OutPath}EntityQueryBuilderFactory.cs", false, Encoding.UTF8);
+			o.NewLine = "\n";
+
+			o.WriteLine("using System.Runtime.CompilerServices;\n");
+			o.WriteLine("namespace SlimECS\n{");
+			o.WriteLine("\tpublic static class EntityQueryBuilderFactory\n\t{");
+
+			o.WriteFactoryTemplates("All");
+			
+			o.WriteLine();
+			o.WriteFactoryTemplates("Any");
+
+			o.WriteLine("\t}\n}");
 			o.Close();
 		}
 
@@ -96,82 +129,84 @@ namespace SlimECS
 			}
 		}
 
-		private static void WriteQueryBuilderFile()
+		private static void WriteBuilderTemplates(this StreamWriter o, string mode)
 		{
-			var o = new StreamWriter($"{OutPath}EntityQueryBuilder.cs", false, Encoding.UTF8);
-			o.NewLine = "\n";
-
-			o.WriteLine("namespace SlimECS\n{");
-
 			for (int qIndex = 1; qIndex <= IncludeCount; qIndex++)
 			{
-				o.Write("\tpublic struct EntityQueryBuilder<");
+				o.Write($"\tpublic struct EntityQuery{mode}Builder<");
 				o.WriteParamList("T", qIndex);
 				o.Write("> ");
 				o.WriteConstraintList("T", qIndex);
 				o.WriteLine("\n\t{");
 
-				o.Write("\t\tpublic EntityQueryAll<");
+				o.WriteLine($"\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+				o.Write($"\t\tpublic EntityQuery{mode}<");
 				o.WriteParamList("T", qIndex);
-				o.Write("> GetQuery() => (EntityQueryAll<");
+				o.Write($"> Get()\n\t\t\t=> (EntityQuery{mode}<");
 				o.WriteParamList("T", qIndex);
-				o.Write(">)_context.GetQuery(typeof(EntityQueryAll<");
+				o.Write($">)_context.GetQuery(typeof(EntityQuery{mode}<");
 				o.WriteParamList("T", qIndex);
 				o.WriteLine(">));");
 
-				o.WriteLine("\t\tinternal EntityQueryBuilder(Context c) => _context = c;");
-				o.WriteLine("\t\treadonly Context _context;");
-				o.WriteLine();
-
 				for (int exIndex = 1; exIndex <= ExcludeCount; exIndex++)
 				{
-					o.Write("\t\tpublic WithoutBuilder<");
+					o.WriteLine($"\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+					o.Write($"\t\tpublic EntityQuery{mode}<");
+					o.WriteParamList("T", qIndex);
+					o.Write(">.Without<");
 					o.WriteParamList("X", exIndex);
 					o.Write("> Without<");
 					o.WriteParamList("X", exIndex);
 					o.Write(">() ");
 					o.WriteConstraintList("X", exIndex);
-					o.Write("=> new WithoutBuilder<");
-					o.WriteParamList("X", exIndex);
-					o.WriteLine(">(_context);");
-				}
-
-				o.WriteLine();
-
-				for (int exIndex = 1; exIndex <= ExcludeCount; exIndex++)
-				{
-					o.Write("\t\tpublic struct WithoutBuilder<");
-					o.WriteParamList("X", exIndex);
-					o.Write("> ");
-					o.WriteConstraintList("X", exIndex);
-					o.WriteLine("{");
-
-					o.Write("\t\t\tpublic EntityQueryAll<");
+					o.WriteLine();
+					o.Write($"\t\t\t=> (EntityQuery{mode}<");
 					o.WriteParamList("T", qIndex);
 					o.Write(">.Without<");
 					o.WriteParamList("X", exIndex);
-					o.Write("> GetQuery() => (EntityQueryAll<");
-					o.WriteParamList("T", qIndex);
-					o.Write(">.Without<");
-					o.WriteParamList("X", exIndex);
-					o.Write(">)_context.GetQuery(typeof(EntityQueryAll<");
+					o.Write($">)_context.GetQuery(typeof(EntityQuery{mode}<");
 					o.WriteParamList("T", qIndex);
 					o.Write(">.Without<");
 					o.WriteParamList("X", exIndex);
 					o.WriteLine(">));");
-
-					o.WriteLine("\t\t\tinternal WithoutBuilder(Context c) => _context = c;");
-					o.WriteLine("\t\t\treadonly Context _context;");
-
-					o.WriteLine("\t\t}");
 				}
+
+				o.WriteLine();
+
+				o.WriteLine($"\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+				o.Write($"\t\tpublic static implicit operator EntityQuery{mode}<");
+				o.WriteParamList("T", qIndex);
+				o.Write($">(EntityQuery{mode}Builder<");
+				o.WriteParamList("T", qIndex);
+				o.Write("> b");
+				o.WriteLine(") => b.Get();");
+
+				o.WriteLine();
+				o.WriteLine($"\t\tinternal EntityQuery{mode}Builder(Context c) => _context = c;");
+				o.WriteLine("\t\treadonly Context _context;");
 
 				o.WriteLine("\t}");
 				o.WriteLine();
 			}
+		}
 
-			o.WriteLine("}");
-			o.Close();
+		private static void WriteFactoryTemplates(this StreamWriter o, string mode)
+		{
+			for (int qIndex = 1; qIndex <= IncludeCount; qIndex++)
+			{
+				o.WriteLine($"\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+				o.Write($"\t\tpublic static EntityQuery{mode}Builder<");
+				o.WriteParamList("T", qIndex);
+				o.Write($"> With{mode}<");
+				o.WriteParamList("T", qIndex);
+				o.Write(">(this Context c) ");
+				o.WriteConstraintList("T", qIndex);
+				o.WriteLine();
+
+				o.Write($"\t\t\t=> new EntityQuery{mode}Builder<");
+				o.WriteParamList("T", qIndex);
+				o.WriteLine($">(c);\n");
+			}
 		}
 	}
 }

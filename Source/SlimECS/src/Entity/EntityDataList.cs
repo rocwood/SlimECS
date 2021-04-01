@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SlimECS
 {
@@ -10,8 +11,9 @@ namespace SlimECS
 		struct EntityData
 		{
 			public int id;
-			public bool toDestroy;
+			public bool destroy;
 			public bool changed;
+			public bool[] components;
 			public string name;
 		}
 
@@ -24,6 +26,9 @@ namespace SlimECS
 
 		private bool _hasToDestroy = false;
 		private bool _hasChanged = false;
+
+		private readonly Dictionary<int, int> _destroyMap = new Dictionary<int, int>();
+		private readonly Dictionary<int, int> _changedMap = new Dictionary<int, int>();
 
 		public EntityDataList(int capacity)
 		{
@@ -76,10 +81,11 @@ namespace SlimECS
 			d.id = id;
 			d.name = name;
 			d.changed = true;
-			d.toDestroy = false;
+			d.destroy = false;
 
 			_entityCount++;
 
+			_changedMap[id] = slot;
 			_hasChanged = true;
 
 			return new Entity(id, slot);
@@ -95,22 +101,25 @@ namespace SlimECS
 
 		public bool IsActive(Entity e)
 		{
-			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
+			if (e.id <= 0 || e.slot < 0)
 				return false;
 
 			ref var d = ref _entities[e.slot];
-			return d.id == e.id && !d.toDestroy;
+			return d.id == e.id && !d.destroy;
 		}
 
 		internal void SetChanged(Entity e)
 		{
-			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
+			if (e.id <= 0 || e.slot < 0)
 				return;
 
 			ref var d = ref _entities[e.slot];
-			if (d.id == e.id)
-				d.changed = true;
+			if (d.id != e.id)
+				return;
 
+			d.changed = true;
+
+			_changedMap[e.id] = e.slot;
 			_hasChanged = true;
 		}
 
@@ -145,12 +154,15 @@ namespace SlimECS
 
 		public void Destroy(Entity e)
 		{
-			if (e.id <= 0 || e.slot < 0 || e.slot >= _entities.Length)
+			if (e.id <= 0 || e.slot < 0)
 				return;
 
 			ref var d = ref _entities[e.slot];
-			d.toDestroy = true;
+			d.destroy = true;
 			d.changed = true;
+
+			_changedMap[e.id] = e.slot;
+			_destroyMap[e.id] = e.slot;
 
 			_hasToDestroy = true;
 			_hasChanged = true;
@@ -161,14 +173,29 @@ namespace SlimECS
 			if (!_hasToDestroy)
 				return;
 
+			foreach (var kv in _destroyMap)
+			{
+				int slot = kv.Value;
+
+				ref var e = ref _entities[slot];
+				e.id = -_freeSlotHead;
+				e.destroy = false;
+				e.changed = false;
+				e.name = null;
+
+				_freeSlotHead = slot;
+				_entityCount--;
+			}
+
+			/*
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
 				ref var e = ref _entities[slot];
-				if (e.toDestroy && e.id > 0)
+				if (e.destroy && e.id > 0)
 				{
 					e.id = -_freeSlotHead;
-					e.toDestroy = false;
+					e.destroy = false;
 					e.changed = false;
 					e.name = null;
 
@@ -176,7 +203,9 @@ namespace SlimECS
 					_entityCount--;
 				}
 			}
+			*/
 
+			_destroyMap.Clear();
 			_hasToDestroy = false;
 		}
 
@@ -187,7 +216,7 @@ namespace SlimECS
 			{
 				ref var e = ref _entities[slot];
 				if (e.id > 0)
-					process(new Entity(e.id, slot), !e.toDestroy, e.changed);
+					process(new Entity(e.id, slot), !e.destroy, e.changed);
 			}
 		}
 
@@ -197,7 +226,7 @@ namespace SlimECS
 			for (int slot = 0; slot < length; slot++)
 			{
 				ref var e = ref _entities[slot];
-				if (e.id > 0 && !e.toDestroy)
+				if (e.id > 0 && !e.destroy)
 					process(new Entity(e.id, slot));
 			}
 		}
@@ -207,6 +236,10 @@ namespace SlimECS
 			if (!_hasChanged)
 				return;
 
+			foreach (var kv in _changedMap)
+				process(new Entity(kv.Key, kv.Value));
+			
+			/*
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
@@ -214,6 +247,7 @@ namespace SlimECS
 				if (e.changed && e.id > 0)
 					process(new Entity(e.id, slot));
 			}
+			*/
 		}
 
 		internal void ResetChanged()
@@ -221,12 +255,18 @@ namespace SlimECS
 			if (!_hasChanged)
 				return;
 
+			foreach (var kv in _changedMap)
+				_entities[kv.Value].changed = false;
+
+			/*
 			int length = _entities.Length;
 			for (int slot = 0; slot < length; slot++)
 			{
 				_entities[slot].changed = false;
 			}
+			*/
 
+			_changedMap.Clear();
 			_hasChanged = false;
 		}
 	}

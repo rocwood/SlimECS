@@ -25,12 +25,12 @@ namespace SlimECS.Benchmark
 	{
 		private float axisBound = 100;
 
-		private Group query;
+		private EntityQuery query;
 
 		public override void Execute()
 		{
 			if (query == null)
-				query = context.WithAll<Position, Velocity>().GetGroup();
+				query = context.WithAll<Position, Velocity>();
 
 			for (int i = 0; i < query.Count; i++)
 			{
@@ -61,12 +61,12 @@ namespace SlimECS.Benchmark
 		private const int maxChildLifeTime = 1000;
 		private const float maxAxisSpeed = 20;
 
-		private Group query;
+		private EntityQuery query;
 
 		public override void Execute()
 		{
 			if (query == null) 
-				query = context.WithAll<Position, LifeTime>().GetGroup();
+				query = context.WithAll<Position, LifeTime>();
 
 			for (int i = 0; i < query.Count; i++)
 			{
