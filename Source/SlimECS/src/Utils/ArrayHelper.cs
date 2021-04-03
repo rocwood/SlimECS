@@ -23,13 +23,5 @@ namespace SlimECS
 			if (size > array.Length)
 				Array.Resize(ref array, size);
 		}
-
-		/*
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void EnsureAccess<T>(ref T[] array, int index)
-		{
-			EnsureLength(ref array, index + 1);
-		}
-		*/
 	}
 }

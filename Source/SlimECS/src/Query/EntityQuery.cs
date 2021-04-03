@@ -5,69 +5,31 @@ namespace SlimECS
 {
 	public abstract class EntityQuery
 	{
-		private const int DefaultCapacity = 16;
-
-		private readonly Dictionary<int, int> _entityMap = new Dictionary<int, int>(DefaultCapacity);
-		private Entity[] _entities = new Entity[DefaultCapacity];
-		private int _count;
+		private EntitySet _entities = new EntitySet();
 
 		public int Count
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _count;
+			get => _entities.Count;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Entity GetAt(int index) => _entities[index];
+		public Entity GetAt(int index) => _entities.GetAt(index);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerator<Entity> GetEnumerator() => _entities.GetEnumerator();
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal void HandleEntity(Entity e)
 		{
 			if (e.id <= 0)
 				return;
 
 			if (_context.IsMatch(e, _indices, _matchAny))
-				HandleAddEntity(e);
+				_entities.Add(e);
 			else
-				HandleRemoveEntity(e);
-		}
-
-		private void HandleAddEntity(Entity e)
-		{
-			if (_entityMap.TryGetValue(e.id, out var index))
-			{
-				_entities[index] = e;
-			}
-			else
-			{
-				if (_count >= _entities.Length)
-					ArrayHelper.EnsureLength(ref _entities, _count + 1);
-
-				_entities[_count] = e;
-				_entityMap[e.id] = _count;
-
-				_count++;
-			}
-		}
-
-		private void HandleRemoveEntity(Entity e)
-		{
-			if (_count <= 0)
-				return;
-
-			if (!_entityMap.TryGetValue(e.id, out var index))
-				return;
-
-			_entityMap.Remove(e.id);
-
-			int last = _count - 1;
-			if (index < last)
-			{
-				ref var other = ref _entities[last];
-				_entities[index] = other;
-				_entityMap[other.id] = index;
-			}
-
-			_count--;
+				_entities.Remove(e);
 		}
 
 
