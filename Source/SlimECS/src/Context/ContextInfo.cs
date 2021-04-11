@@ -35,6 +35,9 @@ namespace SlimECS
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static int GetIndexOf<T>() where T : struct, IComponent
 		{
+			return ComponentTypeInfo<T>.index;
+
+			/*
 			var info = ComponentTypeInfo<T>.info;
 			if (info == null)
 			{
@@ -49,6 +52,7 @@ namespace SlimECS
 			}
 
 			return info.index;
+			*/
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,7 +73,17 @@ namespace SlimECS
 			for (int i = 0; i < types.Length; i++)
 			{
 				var t = types[i];
-				list[i] = new ComponentTypeInfo(t, i, IsZeroSizeStruct(t));
+				var typeInfo = new ComponentTypeInfo(t, i, IsZeroSizeStruct(t));
+				
+				list[i] = typeInfo;
+
+				var infoCacheType = typeof(ComponentTypeInfo<>).MakeGenericType(t);
+
+				var fieldIndex = infoCacheType.GetField("index", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+				fieldIndex.SetValue(null, i);
+
+				var fieldZeroSize = infoCacheType.GetField("zeroSize", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+				fieldZeroSize?.SetValue(null, typeInfo.zeroSize);
 			}
 
 			return list;
@@ -86,7 +100,8 @@ namespace SlimECS
 
 		class ComponentTypeInfo<T> where T : struct, IComponent
 		{
-			internal static ComponentTypeInfo info;
+			internal static int index = -1;
+			internal static bool zeroSize = false;
 		}
 	}
 }
