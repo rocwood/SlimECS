@@ -5,21 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace SlimECS
 {
-	public class ComponentTypeInfo
-	{
-		public readonly Type type;
-		public readonly int index;
-		public readonly bool zeroSize;
-
-		public ComponentTypeInfo(Type type, int index, bool zeroSize)
-		{
-			this.type = type;
-			this.index = index;
-			this.zeroSize = zeroSize;
-		}
-	}
-
-	public class ContextInfo
+	public static class ContextInfo
 	{
 		private static ComponentTypeInfo[] _componentInfoList;
 
@@ -36,31 +22,12 @@ namespace SlimECS
 		public static int GetIndexOf<T>() where T : struct, IComponent
 		{
 			return ComponentTypeInfo<T>.index;
-
-			/*
-			var info = ComponentTypeInfo<T>.info;
-			if (info == null)
-			{
-				if (_componentInfoList == null)
-					_componentInfoList = CollectComponents();
-
-				info = Array.Find(_componentInfoList, x => x.type == typeof(T));
-				if (info == null)
-					return -1;
-
-				ComponentTypeInfo<T>.info = info;
-			}
-
-			return info.index;
-			*/
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ComponentTypeInfo[] CollectComponents()
 		{
 			var baseType = typeof(IComponent);
 
-			// TODO: skip some types via Attribute
 			var types = AppDomain.CurrentDomain.GetAssemblies()
 				.Where(s => !s.FullName.StartsWith("System.") && !s.FullName.StartsWith("SlimECS."))
 				.SelectMany(s => s.GetTypes())
@@ -77,31 +44,25 @@ namespace SlimECS
 				
 				list[i] = typeInfo;
 
-				var infoCacheType = typeof(ComponentTypeInfo<>).MakeGenericType(t);
+				var infoType = typeof(ComponentTypeInfo<>).MakeGenericType(t);
 
-				var fieldIndex = infoCacheType.GetField("index", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+				var fieldIndex = infoType.GetField("index", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 				fieldIndex.SetValue(null, i);
 
-				var fieldZeroSize = infoCacheType.GetField("zeroSize", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+				var fieldZeroSize = infoType.GetField("zeroSize", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 				fieldZeroSize?.SetValue(null, typeInfo.zeroSize);
 			}
 
 			return list;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		// https://stackoverflow.com/a/27851610
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool IsZeroSizeStruct(Type t)
 		{
 			return t.IsValueType && !t.IsPrimitive 
 				&& t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
 					.All(field => IsZeroSizeStruct(field.FieldType));
-		}
-
-		class ComponentTypeInfo<T> where T : struct, IComponent
-		{
-			internal static int index = -1;
-			internal static bool zeroSize = false;
 		}
 	}
 }

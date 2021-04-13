@@ -37,10 +37,10 @@ namespace SlimECS
 		protected void make(params int[] indices) => this._indices = indices;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static int inc<T>() where T : struct, IComponent => ContextInfo.GetIndexOf<T>();
+		protected static int inc<T>() where T : struct, IComponent => ComponentTypeInfo<T>.index;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static int outc<T>() where T : struct, IComponent => -ContextInfo.GetIndexOf<T>()-1;
+		protected static int outc<T>() where T : struct, IComponent => -ComponentTypeInfo<T>.index-1;
 
 		protected EntityQuery(Context c, bool matchAny)
 		{

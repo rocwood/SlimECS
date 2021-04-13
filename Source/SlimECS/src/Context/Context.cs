@@ -47,7 +47,7 @@ namespace SlimECS
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private IComponentDataList<T> GetComponentDataList<T>() where T : struct, IComponent
 		{
-			int componentIndex = ContextInfo.GetIndexOf<T>();
+			int componentIndex = ComponentTypeInfo<T>.index;
 			return (IComponentDataList<T>)_components[componentIndex];
 		}
 
