@@ -35,6 +35,14 @@ namespace SlimECS
 			return this;
 		}
 
+		public void Init()
+		{
+			for (int i = 0; i < _systems.Count; i++)
+			{
+				_systems[i].system.Init();
+			}
+		}
+
 		public void Execute()
 		{
 			MakeSorted();

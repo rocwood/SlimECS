@@ -1,3 +1,5 @@
+#if false
+
 namespace SlimECS
 {
 	class EmptyComponentRef<T> where T : struct, IComponent
@@ -5,3 +7,5 @@ namespace SlimECS
 		public static T value;
 	}
 }
+
+#endif

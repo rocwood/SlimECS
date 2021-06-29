@@ -5,7 +5,7 @@ namespace SlimECS
 {
 	public abstract class EntityQuery
 	{
-		private EntitySet _entities = new EntitySet();
+		internal EntitySet _entities = new EntitySet();
 
 		public int Count
 		{
@@ -17,9 +17,12 @@ namespace SlimECS
 		public Entity GetAt(int index) => _entities.GetAt(index);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IEnumerator<Entity> GetEnumerator() => _entities.GetEnumerator();
+		public ref Entity RefAt(int index) => ref _entities._items[index];
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public EntitySet.Enumerator GetEnumerator() => _entities.GetEnumerator();
 
+		/*
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal void HandleEntity(Entity e)
 		{
@@ -32,6 +35,12 @@ namespace SlimECS
 				_entities.Remove(e);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal void HandleAddEntity(Entity e) => _entities.Add(e);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal void HandleRemoveEntity(Entity e) => _entities.Remove(e);
+		*/
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected void make(params int[] indices) => this._indices = indices;
@@ -49,7 +58,7 @@ namespace SlimECS
 		}
 
 		protected readonly Context _context;
-		protected readonly bool _matchAny;
-		protected int[] _indices;
+		internal readonly bool _matchAny;
+		internal int[] _indices;
 	}
 }

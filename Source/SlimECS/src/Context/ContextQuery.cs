@@ -25,7 +25,19 @@ namespace SlimECS
 				if (query == null)
 					return null;
 
-				_entities.ForEachActive(e => query.HandleEntity(e));
+				//_entities.ForEachActive(e => query.HandleEntity(e));
+
+				var items = _entities.items;
+
+				for (int slot = 0; slot < items.Length; slot++)
+				{
+					ref var d = ref items[slot];
+					if (d.id > 0 && !d.destroy)
+					{
+						if (IsMatch(ref d, query._indices, query._matchAny))
+							query._entities.Add(new Entity(d.id, slot, this));
+					}
+				}
 
 				_queryMap.Add(queryType, query);
 				_queries.Add(query);
@@ -42,54 +54,62 @@ namespace SlimECS
 
 		private void HandleGroupChanges()
 		{
-			if (_handleGroupChangedFunc == null)
-				_handleGroupChangedFunc = HandleGroupChangesImpl;
+			if (!_hasChanged)
+				return;
 
-			_entities.ForEachChanged(_handleGroupChangedFunc);
-			_entities.ResetChanged();
+			foreach (var kv in _changedMap)
+			{
+				ref var d = ref _entities.items[kv.Value];
+				var e = new Entity(d.id, kv.Value, this);
+
+				for (int i = 0; i < _queries.Count; i++)
+				{
+					var query = _queries[i];
+
+					if (IsMatch(ref d, query._indices, query._matchAny))
+						query._entities.Add(e);
+					else
+						query._entities.Remove(e);
+				}
+			}
+
+			_changedMap.Clear();
+			_hasChanged = false;
 		}
 
+		/*
 		private Action<Entity> _handleGroupChangedFunc;
 
 		private void HandleGroupChangesImpl(Entity e)
 		{
 			for (int i = 0; i < _queries.Count; i++)
 				_queries[i].HandleEntity(e);
-			
-			/*
-			foreach (var kv in _groups)
-				kv.Value?.HandleEntity(e);
-			*/
+		}
+		*/
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool IsMatch(ref EntityData d, int[] indices, bool matchAny)
+		{
+			if (d.destroy || indices == null)
+				return false;
+
+			return matchAny ? IsMatchAny(ref d, indices) : IsMatchAll(ref d, indices);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal bool IsMatch(Entity e, IReadOnlyList<int> indices, bool matchAny)
+		private static bool IsMatchAll(ref EntityData d, int[] indices)
 		{
-			return matchAny ? IsMatchAny(e, indices) : IsMatchAll(e, indices);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool IsMatchAll(Entity e, IReadOnlyList<int> indices)
-		{
-			if (!IsActive(e))
-				return false;
-
-			if (indices == null)
-				return false;
-
-			for (int i = 0; i < indices.Count; i++)
+			for (int i = 0; i < indices.Length; i++)
 			{
 				var index = indices[i];
-				if (index >= 0)
+				if (index >= 0) // include
 				{
-					var c = _components[index];
-					if (c == null || !c.Has(e.id, e.slot))
+					if (d.components[index] < 0)
 						return false;
 				}
-				else
+				else  // exclude
 				{
-					var c = _components[-index-1];
-					if (c != null && c.Has(e.id, e.slot))
+					if (d.components[-index - 1] >= 0)
 						return false;
 				}
 			}
@@ -98,32 +118,24 @@ namespace SlimECS
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool IsMatchAny(Entity e, IReadOnlyList<int> indices)
+		private static bool IsMatchAny(ref EntityData d, int[] indices)
 		{
-			if (!IsActive(e))
-				return false;
-
-			if (indices == null)
-				return false;
-
 			bool hasAny = false;
 
-			for (int i = 0; i < indices.Count; i++)
+			for (int i = 0; i < indices.Length; i++)
 			{
 				var index = indices[i];
-				if (index >= 0)
+				if (index >= 0) // include
 				{
 					if (!hasAny)
 					{
-						var c = _components[indices[i]];
-						if (c != null && c.Has(e.id, e.slot))
+						if (d.components[index] >= 0)
 							hasAny = true;
 					}
 				}
-				else
+				else // exclude
 				{
-					var c = _components[-index - 1];
-					if (c != null && c.Has(e.id, e.slot))
+					if (d.components[-index - 1] >= 0)
 						return false;
 				}
 			}

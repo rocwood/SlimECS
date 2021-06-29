@@ -1,3 +1,5 @@
+#if false
+
 using System.Collections.Generic;
 
 namespace SlimECS
@@ -71,3 +73,5 @@ namespace SlimECS
 		}
 	}
 }
+
+#endif

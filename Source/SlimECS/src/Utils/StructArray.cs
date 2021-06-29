@@ -20,7 +20,11 @@ namespace SlimECS
 			_items = new T[capacity];
 		}
 
-		public int Length => _items.Length;
+		public int Length
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _items.Length;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Ref(int index) => ref _items[index];

@@ -5,12 +5,12 @@ using System.Runtime.CompilerServices;
 
 namespace SlimECS
 {
-	class EntitySet
+	public class EntitySet
 	{
 		private const int DefaultCapacity = 16;
 
 		private readonly Dictionary<int, int> _lookup;
-		private Entity[] _items;
+		public Entity[] _items;
 		private int _count;
 
 		public EntitySet(int capacity = 0)
@@ -18,8 +18,8 @@ namespace SlimECS
 			if (capacity <= 0)
 				capacity = DefaultCapacity;
 
-			_lookup = new Dictionary<int, int>(capacity);
 			_items = new Entity[capacity];
+			_lookup = new Dictionary<int, int>(capacity);
 		}
 
 		public int Count
@@ -105,7 +105,7 @@ namespace SlimECS
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IEnumerator<Entity> GetEnumerator()
+		public Enumerator GetEnumerator()
 		{
 			return new Enumerator(this);
 		}

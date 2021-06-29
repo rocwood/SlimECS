@@ -1,3 +1,5 @@
+#if false
+
 using System;
 using System.Collections.Generic;
 
@@ -13,16 +15,14 @@ namespace SlimECS
 			public int id;
 			public bool destroy;
 			public bool changed;
-			public bool[] components;
 			public string name;
+			public int[] components;
 		}
 
-		private EntityData[] _entities;
+		private StructDataPool<EntityData> _entities;
 
 		private int _lastId = 0;
 		private int _entityCount = 0;
-
-		private int _freeSlotHead = 0;
 
 		private bool _hasToDestroy = false;
 		private bool _hasChanged = false;
@@ -40,12 +40,6 @@ namespace SlimECS
 			_freeSlotHead = 0;
 
 			InitFreeSlotLinks(0, capacity);
-		}
-
-		private void InitFreeSlotLinks(int start, int end)
-		{
-			for (int i = start; i < end; i++)
-				_entities[i].id = -(i + 1);
 		}
 
 		public int Count => _entityCount;
@@ -70,18 +64,17 @@ namespace SlimECS
 		public Entity Create(string name)
 		{
 			var id = ++_lastId;
-			int slot = _freeSlotHead;
 
-			EnsureAccess(slot);
 
-			ref var d = ref _entities[slot];
+			int slot = _entities.Alloc();
 
-			_freeSlotHead = -d.id;
+			ref var d = ref _entities.items[slot];
 
 			d.id = id;
 			d.name = name;
 			d.changed = true;
 			d.destroy = false;
+			//d.components = new int[];
 
 			_entityCount++;
 
@@ -93,27 +86,31 @@ namespace SlimECS
 
 		public void SetName(Entity e, string name)
 		{
-			if (!IsActive(e))
+			if (e.id <= 0)
 				return;
 
-			_entities[e.slot].name = name;
+			ref var d = ref _entities.items[e.slot];
+			if (d.id != e.id || d.destroy)
+				return;
+
+			d.name = name;
 		}
 
 		public bool IsActive(Entity e)
 		{
-			if (e.id <= 0 || e.slot < 0)
+			if (e.id <= 0)
 				return false;
 
-			ref var d = ref _entities[e.slot];
+			ref var d = ref _entities.items[e.slot];
 			return d.id == e.id && !d.destroy;
 		}
 
 		internal void SetChanged(Entity e)
 		{
-			if (e.id <= 0 || e.slot < 0)
+			if (e.id <= 0)
 				return;
 
-			ref var d = ref _entities[e.slot];
+			ref var d = ref _entities.items[e.slot];
 			if (d.id != e.id)
 				return;
 
@@ -121,35 +118,6 @@ namespace SlimECS
 
 			_changedMap[e.id] = e.slot;
 			_hasChanged = true;
-		}
-
-		private void EnsureAccess(int index)
-		{
-			int size = _entities.Length;
-			if (index < size)
-				return;
-
-			while (index >= size)
-			{
-				if (size <= 0)
-					size = DefaultCapacity;
-				else
-					size *= 2;
-
-				if ((uint)size > MaxCapacity)
-				{
-					size = MaxCapacity;
-					break;
-				}
-			}
-
-			if (size > _entities.Length)
-			{
-				int oldSize = _entities.Length;
-				Array.Resize(ref _entities, size);
-
-				InitFreeSlotLinks(oldSize, size);
-			}
 		}
 
 		public void Destroy(Entity e)
@@ -271,3 +239,5 @@ namespace SlimECS
 		}
 	}
 }
+
+#endif

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using SlimECS;
 
 namespace ECS.Benchmark
@@ -15,30 +16,30 @@ namespace ECS.Benchmark
 		public float x;
 		public float y;
 	}
-	
+
 	public class MovementSystem : SystemBase
 	{
 		private const float axisBound = 100;
 
-		private EntityQueryAll<Position, Velocity> query;
-
-		public override void Init()
-		{
-			context.GetQuery(out query);
-		}
+		private EntitySet query;
 
 		public override void Execute()
 		{
-			//if (query == null)
-			//	context.GetQuery(out query);
+			if (query == null)
+				query = FakeContext.pvQuery;
 
-			foreach (var e in query)
+			//var items = query._items;
+
 			//for (int i = 0; i < query.Count; i++)
+			foreach (var e in query)
 			{
-				//ref var e = ref query.RefAt(i);
+				//var e = items[i];
+				//var e = query.GetAt(i);
 
-				ref var v = ref e.Ref<Velocity>();
-				ref var pos = ref e.Ref<Position>();
+				//ref var v = ref FakeContext.velocityComponents[e.slot];
+				//ref var pos = ref FakeContext.positionComponents[e.slot];
+				ref var v = ref FakeContext.velocityComponents.pool.items[e.slot];
+				ref var pos = ref FakeContext.positionComponents.pool.items[e.slot];
 
 				pos.x += v.x;
 				pos.y += v.y;
@@ -54,6 +55,16 @@ namespace ECS.Benchmark
 		}
 	}
 
+	static class FakeContext
+	{
+		//public static Position[] positionComponents;
+		//public static Velocity[] velocityComponents;
+		public static ComponentDataPool<Position> positionComponents;
+		public static ComponentDataPool<Velocity> velocityComponents;
+		public static EntitySet pvQuery;
+		//public static Entity[] pvQuery0;
+	}
+
 	public class BenchmarkCase
 	{
 		private const float axisBound = 100;
@@ -62,56 +73,54 @@ namespace ECS.Benchmark
 		private const int initialEntityCount = 1000;
 		private const int iterateCount = 10000;
 
-		private Context context;
-		private SystemManager systems;
+		private SystemBase system;
 
 		public void Init()
 		{
-			context = new Context("Default");
+			//FakeContext.positionComponents = new Position[initialEntityCount];
+			//FakeContext.velocityComponents = new Velocity[initialEntityCount];
+			FakeContext.positionComponents = new ComponentDataPool<Position>();
+			FakeContext.velocityComponents = new ComponentDataPool<Velocity>();
+			FakeContext.pvQuery = new EntitySet(initialEntityCount);
+			//FakeContext.pvQuery0 = new Entity[initialEntityCount];
 
-			systems = new SystemManager(context);
-			systems.CollectAll();
-			systems.Init();
+			system = new MovementSystem();
 
 			var random = new Random(1);
 
 			for (int i = 0; i < initialEntityCount; i++)
 			{
-				var child = context.CreateEntity();
-
 				float x = ((float)random.NextDouble() - 0.5f) * axisBound;
 				float y = ((float)random.NextDouble() - 0.5f) * axisBound;
-				child.Set(new Position { x = x, y = y });
+				//FakeContext.positionComponents[i] = new Position { x = x, y = y };
+				var ii = FakeContext.positionComponents.pool.Alloc();
+				FakeContext.positionComponents.pool.items[ii] = new Position { x = x, y = y };
 
 				float vx = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
 				float vy = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
-				child.Set(new Velocity { x = vx, y = vy });
+				//FakeContext.velocityComponents[i] = new Velocity { x = vx, y = vy };
+				ii = FakeContext.velocityComponents.pool.Alloc();
+				FakeContext.velocityComponents.pool.items[ii] = new Velocity { x = vx, y = vy };
 
-				if (i == 0)
-					e0 = child;
+				var e = new Entity(i + 1, i, null);
+				FakeContext.pvQuery.Add(e);
+				//FakeContext.pvQuery0[i] = e;
 			}
-
-			context.WithAll<Position, Velocity>().Get();
-			context.Poll();
 		}
 
 		public void Execute()
 		{
 			for (int i = 0; i < iterateCount; i++)
 			{
-				systems.Execute();
+				system.Execute();
 			}
 		}
 
-		private Entity e0;
-
 		public void Cleanup()
 		{
-			ref var pos = ref e0.Ref<Position>();
+			//ref var pos = ref FakeContext.positionComponents[0];
+			ref var pos = ref FakeContext.positionComponents.pool.items[0];
 			Console.WriteLine($"e0({pos.x},{pos.y})");
-
-			systems = null;
-			context = null;
 		}
 	}
 

@@ -12,15 +12,15 @@ namespace SlimECS.Test
 
 			Assert.AreEqual(0, context.Count);
 
-			var e1 = context.Create();
+			var e1 = context.CreateEntity();
 			Assert.AreEqual(1, context.Count);
 			Assert.IsTrue(context.IsActive(e1));
 
-			var e2 = context.Create();
+			var e2 = context.CreateEntity();
 			Assert.AreEqual(2, context.Count);
 			Assert.IsTrue(context.IsActive(e2));
 
-			var e3 = context.Create();
+			var e3 = context.CreateEntity();
 			Assert.AreEqual(3, context.Count);
 			Assert.IsTrue(context.IsActive(e3));
 
@@ -34,7 +34,7 @@ namespace SlimECS.Test
 			Assert.AreEqual(2, context.Count);
 			Assert.IsFalse(context.IsActive(e2));
 
-			var e4 = context.Create();
+			var e4 = context.CreateEntity();
 			Assert.AreEqual(3, context.Count);
 			Assert.IsTrue(context.IsActive(e4));
 
@@ -57,7 +57,7 @@ namespace SlimECS.Test
 			int contextId = 2;
 			var context = new Context(contextId, $"Context{contextId}");
 
-			var e1 = context.Create();
+			var e1 = context.CreateEntity();
 
 			Assert.IsTrue(context.IsActive(e1));
 

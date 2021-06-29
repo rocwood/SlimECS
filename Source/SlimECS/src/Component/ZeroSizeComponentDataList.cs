@@ -1,3 +1,5 @@
+#if false
+
 namespace SlimECS
 {
 	internal class ZeroSizeComponentDataList<T> : IComponentDataList<T> where T : struct, IComponent
@@ -56,3 +58,5 @@ namespace SlimECS
 		}
 	}
 }
+
+#endif
