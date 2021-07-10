@@ -38,8 +38,8 @@ namespace ECS.Benchmark
 
 				//ref var v = ref FakeContext.velocityComponents[e.slot];
 				//ref var pos = ref FakeContext.positionComponents[e.slot];
-				ref var v = ref FakeContext.velocityComponents.pool.items[e.slot];
-				ref var pos = ref FakeContext.positionComponents.pool.items[e.slot];
+				ref var v = ref FakeContext.velocityComponents.items[e.slot];
+				ref var pos = ref FakeContext.positionComponents.items[e.slot];
 
 				pos.x += v.x;
 				pos.y += v.y;
@@ -59,8 +59,8 @@ namespace ECS.Benchmark
 	{
 		//public static Position[] positionComponents;
 		//public static Velocity[] velocityComponents;
-		public static ComponentDataPool<Position> positionComponents;
-		public static ComponentDataPool<Velocity> velocityComponents;
+		public static StructDataPool<Position> positionComponents;
+		public static StructDataPool<Velocity> velocityComponents;
 		public static EntitySet pvQuery;
 		//public static Entity[] pvQuery0;
 	}
@@ -79,8 +79,8 @@ namespace ECS.Benchmark
 		{
 			//FakeContext.positionComponents = new Position[initialEntityCount];
 			//FakeContext.velocityComponents = new Velocity[initialEntityCount];
-			FakeContext.positionComponents = new ComponentDataPool<Position>();
-			FakeContext.velocityComponents = new ComponentDataPool<Velocity>();
+			FakeContext.positionComponents = new StructDataPool<Position>(initialEntityCount);
+			FakeContext.velocityComponents = new StructDataPool<Velocity>(initialEntityCount);
 			FakeContext.pvQuery = new EntitySet(initialEntityCount);
 			//FakeContext.pvQuery0 = new Entity[initialEntityCount];
 
@@ -93,14 +93,14 @@ namespace ECS.Benchmark
 				float x = ((float)random.NextDouble() - 0.5f) * axisBound;
 				float y = ((float)random.NextDouble() - 0.5f) * axisBound;
 				//FakeContext.positionComponents[i] = new Position { x = x, y = y };
-				var ii = FakeContext.positionComponents.pool.Alloc();
-				FakeContext.positionComponents.pool.items[ii] = new Position { x = x, y = y };
+				var ii = FakeContext.positionComponents.Alloc();
+				FakeContext.positionComponents.items[ii] = new Position { x = x, y = y };
 
 				float vx = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
 				float vy = ((float)random.NextDouble() - 0.5f) * maxAxisSpeed;
 				//FakeContext.velocityComponents[i] = new Velocity { x = vx, y = vy };
-				ii = FakeContext.velocityComponents.pool.Alloc();
-				FakeContext.velocityComponents.pool.items[ii] = new Velocity { x = vx, y = vy };
+				ii = FakeContext.velocityComponents.Alloc();
+				FakeContext.velocityComponents.items[ii] = new Velocity { x = vx, y = vy };
 
 				var e = new Entity(i + 1, i, null);
 				FakeContext.pvQuery.Add(e);
@@ -119,7 +119,7 @@ namespace ECS.Benchmark
 		public void Cleanup()
 		{
 			//ref var pos = ref FakeContext.positionComponents[0];
-			ref var pos = ref FakeContext.positionComponents.pool.items[0];
+			ref var pos = ref FakeContext.positionComponents.items[0];
 			Console.WriteLine($"e0({pos.x},{pos.y})");
 		}
 	}
