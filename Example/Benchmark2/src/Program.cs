@@ -29,16 +29,16 @@ namespace ECS.Benchmark
 
 		public override void Execute()
 		{
-			//if (query == null)
-			//	context.GetQuery(out query);
+			var positionPool = context.GetComponentDataPool<Position>();
+			var velocityPool = context.GetComponentDataPool<Velocity>();
 
 			foreach (var e in query)
-			//for (int i = 0; i < query.Count; i++)
 			{
-				//ref var e = ref query.RefAt(i);
+				//ref var v = ref e.Ref<Velocity>();
+				//ref var pos = ref e.Ref<Position>();
 
-				ref var v = ref e.Ref<Velocity>();
-				ref var pos = ref e.Ref<Position>();
+				ref var v = ref e.Ref<Velocity>(velocityPool);
+				ref var pos = ref e.Ref<Position>(positionPool);
 
 				pos.x += v.x;
 				pos.y += v.y;

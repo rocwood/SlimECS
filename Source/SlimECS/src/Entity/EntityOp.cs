@@ -123,7 +123,7 @@ namespace SlimECS
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ref T Ref<T>(this Entity e) where T : struct, IComponent
+		public static ref T Ref<T>(this Entity e, ComponentDataPool<T> c = null) where T : struct, IComponent
 		{
 			ref var d = ref e.context._entities.items[e.slot];
 #if DEBUG
@@ -132,7 +132,8 @@ namespace SlimECS
 #endif
 
 			int componentIndex = ComponentTypeInfo<T>.index;
-			var c = e.context.GetComponentDataPool<T>(componentIndex);
+			if (c == null)
+				c = e.context.GetComponentDataPool<T>(componentIndex);
 
 			int index = d.components[componentIndex];
 			if (index < 0)

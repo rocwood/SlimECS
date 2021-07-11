@@ -160,17 +160,15 @@ namespace SlimECS
 			_hasDestroy = false;
 		}
 
-		/*
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal ComponentDataPool<T> GetComponentDataPool<T>() where T : struct, IComponent
+		public ComponentDataPool<T> GetComponentDataPool<T>() where T : struct, IComponent
 		{
 			int componentIndex = ComponentTypeInfo<T>.index;
-			return (ComponentDataPool<T>)_components[componentIndex];
+			return (ComponentDataPool<T>)_componentPools[componentIndex];
 		}
-		*/
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal ComponentDataPool<T> GetComponentDataPool<T>(int componentIndex) where T : struct, IComponent
+		public ComponentDataPool<T> GetComponentDataPool<T>(int componentIndex) where T : struct, IComponent
 		{
 			return (ComponentDataPool<T>)_componentPools[componentIndex];
 		}
